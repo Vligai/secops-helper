@@ -1,3 +1,22 @@
-eml-parser>=1.17.0
+# Core dependencies
 requests>=2.31.0
 python-dotenv>=1.0.0
+
+# EML Parser
+eml-parser>=1.17.0
+
+# IOC Extractor (no additional dependencies)
+
+# Hash Lookup (no additional dependencies - uses requests, python-dotenv)
+
+# Domain/IP Intelligence (no additional dependencies - uses requests, python-dotenv)
+
+# Future tools (commented out until implemented)
+# Log Analysis
+# regex>=2023.0.0
+# python-dateutil>=2.8.0
+# tabulate>=0.9.0
+
+# PCAP Analyzer
+# scapy>=2.5.0
+# dpkt>=1.9.8
