@@ -258,6 +258,63 @@ python pcapAnalyzer/analyzer.py capture.pcap --verbose
 
 ---
 
+## Unified CLI (New! 🚀)
+
+SecOps Helper now provides a unified command-line interface for all tools:
+
+```bash
+# Install the package
+pip install -e .
+
+# Use unified CLI
+secops-helper <command> [options]
+```
+
+**Available Commands:**
+- `eml` - Email analysis
+- `ioc` - IOC extraction
+- `hash` - Hash lookup
+- `intel` - Domain/IP intelligence
+- `log` - Log analysis
+- `pcap` - PCAP analysis
+
+**Examples:**
+```bash
+# Extract IOCs with STIX export
+secops-helper ioc threat_report.txt --format stix --output iocs.json
+
+# Batch hash lookup
+secops-helper hash --file hashes.txt --format csv
+
+# Domain reputation analysis
+secops-helper intel malicious.com
+
+# Log analysis
+secops-helper log /var/log/apache2/access.log --format txt
+
+# Email analysis with VirusTotal
+secops-helper eml suspicious.eml --vt
+```
+
+### STIX 2.1 Export
+
+Export IOCs in STIX 2.1 format for sharing threat intelligence:
+
+```bash
+# Basic STIX export
+secops-helper ioc report.txt --format stix --output indicators.json
+
+# Direct tool usage with STIX
+python iocExtractor/extractor.py report.txt --format stix
+```
+
+STIX output includes:
+- Identity object (creator)
+- Indicator objects for all IOCs
+- Proper STIX 2.1 patterns
+- Valid timestamps and references
+- Support for IPs, domains, URLs, emails, and file hashes
+
 ## Configuration
 
 Create a `.env` file in the project root for API keys:
@@ -276,6 +333,35 @@ ABUSEIPDB_KEY=your_abuseipdb_api_key
 
 ## Installation
 
+### Option 1: Package Installation (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/Vligai/secops-helper.git
+cd secops-helper
+
+# Install as package (includes secops-helper command)
+pip install -e .
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+After installation, you can use the unified `secops-helper` command:
+
+```bash
+# Show help
+secops-helper --help
+
+# Use any tool via unified CLI
+secops-helper ioc threat_report.txt --format stix
+secops-helper hash --file hashes.txt
+secops-helper intel 8.8.8.8
+```
+
+### Option 2: Direct Usage
+
 ```bash
 # Clone the repository
 git clone https://github.com/Vligai/secops-helper.git
@@ -284,9 +370,9 @@ cd secops-helper
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
+# Use tools directly
+python iocExtractor/extractor.py report.txt
+python hashLookup/lookup.py <hash>
 ```
 
 ## Project Documentation
@@ -316,13 +402,20 @@ Complete project specifications and feature documentation available in the [open
 - [x] Log Analysis (Apache, Nginx, Syslog with attack detection)
 - [x] PCAP Analyzer (Network traffic analysis with threat detection)
 
+### Phase 4 (Completed ✅)
+- [x] Comprehensive test suite (158 tests, >75% coverage)
+- [x] CI/CD pipeline (GitHub Actions, pre-commit hooks)
+- [x] Unified CLI tool (`secops-helper` command)
+- [x] STIX 2.1 export support
+- [x] Package installation support (setup.py)
+
 ### Future Enhancements
 - [ ] Web dashboard interface
-- [ ] STIX 2.1 export support
 - [ ] MISP integration
 - [ ] Real-time log monitoring
 - [ ] Machine learning-based anomaly detection
 - [ ] Advanced correlation engine
+- [ ] Docker container support
 
 ## Contributing
 
