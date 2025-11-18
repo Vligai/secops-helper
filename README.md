@@ -8,7 +8,7 @@ SecOps Helper provides command-line utilities for threat analysis, incident resp
 
 ## Available Tools
 
-### EML Parser
+### 1. EML Parser
 
 Analyze email files (.eml) to extract metadata, headers, attachments, and threat indicators.
 
@@ -36,13 +36,144 @@ python emlAnalysis/emlParser.py suspicious_email.eml
 python emlAnalysis/emlParser.py phishing.eml --vt --output report.json
 ```
 
+---
+
+### 2. IOC Extractor
+
+Extract Indicators of Compromise (IOCs) from text sources including reports, logs, and documents.
+
+**Location:** `iocExtractor/extractor.py`
+
+**Features:**
+- Extract IPs (IPv4/IPv6), domains, URLs, emails
+- Extract file hashes (MD5, SHA1, SHA256, SHA512)
+- Extract CVE identifiers
+- Defang/refang IOCs for safe sharing
+- Filter private IPs and whitelisted domains
+- Export to JSON, CSV, or plain text
+
+**Usage:**
+```bash
+python iocExtractor/extractor.py [input_file] [--types ip,domain,url] [--format json|csv|txt]
+```
+
+**Examples:**
+```bash
+# Extract all IOCs from a file
+python iocExtractor/extractor.py threat_report.txt
+
+# Extract only IPs and domains
+python iocExtractor/extractor.py report.txt --types ip,domain
+
+# Defang IOCs for safe sharing
+python iocExtractor/extractor.py report.txt --defang --output safe_iocs.txt
+
+# Export to CSV
+python iocExtractor/extractor.py report.txt --format csv --output iocs.csv
+
+# Exclude private IPs
+python iocExtractor/extractor.py logs.txt --no-private-ips
+```
+
+---
+
+### 3. Hash Lookup
+
+Bulk file hash queries against threat intelligence sources with caching and rate limiting.
+
+**Location:** `hashLookup/lookup.py`
+
+**Features:**
+- Query VirusTotal and MalwareBazaar APIs
+- Batch processing with rate limiting
+- SQLite caching for efficiency
+- Verdict classification (malicious/suspicious/clean/unknown)
+- Export to JSON or CSV
+- Filter results by verdict
+
+**Usage:**
+```bash
+python hashLookup/lookup.py [hash1] [hash2] ... [--file hashes.txt] [--format json|csv]
+```
+
+**Examples:**
+```bash
+# Lookup single hash
+python hashLookup/lookup.py 5d41402abc4b2a76b9719d911017c592
+
+# Lookup from file
+python hashLookup/lookup.py --file hashes.txt
+
+# Export to CSV
+python hashLookup/lookup.py --file hashes.txt --format csv --output results.csv
+
+# Show only malicious hashes
+python hashLookup/lookup.py --file hashes.txt --filter malicious
+
+# Adjust rate limiting (default: 4 req/min for VT free tier)
+python hashLookup/lookup.py --file hashes.txt --rate-limit 4
+```
+
+**API Keys Required:**
+- `VT_API_KEY` - VirusTotal API key (optional, but recommended)
+
+---
+
+### 4. Domain/IP Intelligence
+
+Comprehensive threat intelligence and reputation analysis for domains and IP addresses.
+
+**Location:** `domainIpIntel/intel.py`
+
+**Features:**
+- DNS resolution (A records, reverse DNS)
+- Threat intelligence from VirusTotal and AbuseIPDB
+- Risk scoring and classification
+- Automatic IP vs domain detection
+- Batch processing support
+- Export to JSON or CSV
+
+**Usage:**
+```bash
+python domainIpIntel/intel.py [target] [--file targets.txt] [--format json|csv]
+```
+
+**Examples:**
+```bash
+# Analyze IP address
+python domainIpIntel/intel.py 8.8.8.8
+
+# Analyze domain
+python domainIpIntel/intel.py example.com
+
+# Batch analysis from file
+python domainIpIntel/intel.py --file targets.txt --format csv --output results.csv
+
+# With verbose output
+python domainIpIntel/intel.py suspicious-domain.com --verbose
+```
+
+**API Keys (Optional):**
+- `VT_API_KEY` - VirusTotal API key
+- `ABUSEIPDB_KEY` - AbuseIPDB API key
+
+---
+
 ## Configuration
 
 Create a `.env` file in the project root for API keys:
 
 ```env
+# VirusTotal API (used by EML Parser, Hash Lookup, Domain/IP Intel)
 VT_API_KEY=your_virustotal_api_key
+
+# AbuseIPDB API (used by Domain/IP Intel)
+ABUSEIPDB_KEY=your_abuseipdb_api_key
 ```
+
+**Getting API Keys:**
+- VirusTotal: Sign up at [https://www.virustotal.com/](https://www.virustotal.com/) (free tier: 4 requests/minute)
+- AbuseIPDB: Sign up at [https://www.abuseipdb.com/](https://www.abuseipdb.com/) (free tier available)
 
 ## Installation
 
@@ -64,16 +195,29 @@ cp .env.example .env
 Complete project specifications and feature documentation available in the [openspec/](openspec/) directory:
 
 - [Project Specification](openspec/project.openspec.md) - Overall project architecture and roadmap
-- [EML Parser Spec](openspec/specs/eml-parser.spec.md) - Detailed EML Parser feature specification
+- **Implemented Tools:**
+  - [EML Parser Spec](openspec/specs/eml-parser.spec.md) - Email analysis tool
+  - [IOC Extractor Spec](openspec/specs/ioc-extractor.spec.md) - Indicator extraction
+  - [Hash Lookup Spec](openspec/specs/hash-lookup.spec.md) - Hash threat intelligence
+  - [Domain/IP Intel Spec](openspec/specs/domain-ip-intel.spec.md) - Network intelligence
+- **Planned Tools:**
+  - [Log Analysis Spec](openspec/specs/log-analysis.spec.md) - Security log analysis
+  - [PCAP Analyzer Spec](openspec/specs/pcap-analyzer.spec.md) - Network traffic analysis
 
 ## Roadmap
 
+### Phase 1 (Completed ✅)
 - [x] EML Parser with VirusTotal integration
-- [ ] IOC Extractor (IPs, domains, hashes, URLs)
-- [ ] Hash Lookup utility
-- [ ] Log Analysis tools
-- [ ] Domain/IP Intelligence
+
+### Phase 2 (Completed ✅)
+- [x] IOC Extractor (IPs, domains, hashes, URLs, CVEs)
+- [x] Hash Lookup utility (VirusTotal, MalwareBazaar)
+- [x] Domain/IP Intelligence (DNS, WHOIS, threat intel)
+
+### Phase 3 (Planned)
+- [ ] Log Analysis tools (Apache, Nginx, Syslog, Firewall)
 - [ ] PCAP Network Traffic Analyzer
+- [ ] Advanced threat detection features
 
 ## Contributing
 
