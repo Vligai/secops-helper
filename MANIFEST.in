@@ -1,0 +1,23 @@
+# Include documentation
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+include CLAUDE.md
+include ROADMAP.md
+
+# Include configuration files
+include requirements.txt
+include requirements-dev.txt
+include pytest.ini
+include pyproject.toml
+include codecov.yml
+include .pre-commit-config.yaml
+
+# Include test data
+recursive-include tests/test_data *
+
+# Exclude cache and build files
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store

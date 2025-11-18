@@ -373,7 +373,7 @@ Examples:
 
     parser.add_argument(
         '--format', '-f',
-        choices=['json', 'csv', 'txt'],
+        choices=['json', 'csv', 'txt', 'stix'],
         default='json',
         help='Output format (default: json)'
     )
@@ -475,6 +475,18 @@ def main():
         output = format_output_csv(results)
     elif args.format == 'txt':
         output = format_output_text(results)
+    elif args.format == 'stix':
+        # Import STIX exporter
+        try:
+            from common.stix_export import export_to_stix
+            output = export_to_stix(
+                ioc_data=results,
+                output_type='simple',
+                description=f'IOCs extracted from {source}'
+            )
+        except ImportError:
+            print("Error: STIX export module not found. Please ensure common/stix_export.py exists.", file=sys.stderr)
+            sys.exit(1)
 
     # Write output
     if args.output:
