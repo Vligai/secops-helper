@@ -18,3 +18,7 @@ eml-parser>=1.17.0
 
 # PCAP Analyzer
 scapy>=2.5.0
+
+# YARA Scanner
+yara-python>=4.3.0
+tqdm>=4.66.0
