@@ -10,6 +10,7 @@ A comprehensive toolkit for security analysts providing unified access to:
 - Log analysis
 - PCAP network analysis
 - URL threat analysis
+- YARA malware scanning
 """
 
 import sys
@@ -32,6 +33,7 @@ Available Commands:
   log          Analyze security logs for threats
   pcap         Analyze network traffic captures
   url          Analyze URLs for threats and reputation
+  yara         Scan files with YARA malware detection rules
 
 Examples:
   # Email analysis with VirusTotal
@@ -54,6 +56,9 @@ Examples:
 
   # URL threat analysis
   secops-helper url "http://suspicious-site.com" --format txt
+
+  # YARA malware scanning
+  secops-helper yara scan /samples/ --rules ./yaraScanner/rules/ --recursive
 
 For detailed help on each command:
   secops-helper <command> --help
@@ -165,6 +170,16 @@ Documentation: https://github.com/Vligai/secops-helper
     url_parser.add_argument('--format', choices=['json', 'csv', 'txt'], default='json', help='Output format')
     url_parser.add_argument('--no-cache', action='store_true', help='Disable caching')
     url_parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+
+    # YARA Scanner subcommand
+    yara_parser = subparsers.add_parser(
+        'yara',
+        help='Scan files with YARA rules',
+        description='Malware detection and pattern matching with YARA'
+    )
+    # YARA has its own subcommands, so we pass everything through
+    yara_parser.add_argument('yara_args', nargs=argparse.REMAINDER,
+                            help='YARA scanner arguments (use "secops-helper yara --help" for details)')
 
     return parser
 
@@ -302,6 +317,12 @@ def main():
             sys.argv.append('--verbose')
         sys.argv.extend(remaining)
         url_main()
+
+    elif args.command == 'yara':
+        from yaraScanner.scanner import main as yara_main
+        # Pass all arguments directly to YARA scanner
+        sys.argv = ['scanner.py'] + args.yara_args + remaining
+        yara_main()
 
     else:
         parser.print_help()
