@@ -22,6 +22,12 @@ from domainIpIntel.intel import IntelligenceGatherer
 from logAnalysis.analyzer import LogAnalyzer
 from emlAnalysis.emlParser import EMLParser
 from urlAnalyzer.analyzer import URLAnalyzer
+from yaraScanner.scanner import YARAScanner
+from certAnalyzer.analyzer import CertificateAnalyzer
+from deobfuscator.deobfuscator import Deobfuscator
+from threatFeedAggregator.aggregator import ThreatFeedAggregator
+from fileCarver.carver import FileCarver
+from pcapAnalyzer.analyzer import PCAPAnalyzer
 from common.stix_export import export_to_stix
 from common.cache_manager import get_cache
 
@@ -36,7 +42,12 @@ ALLOWED_EXTENSIONS = {
     'ioc': {'.txt', '.md', '.log', '.json'},
     'log': {'.log', '.txt'},
     'pcap': {'.pcap', '.pcapng', '.cap'},
-    'hash': {'.txt', '.csv'}
+    'hash': {'.txt', '.csv'},
+    'yara': {'.yar', '.yara', '.txt'},
+    'cert': {'.crt', '.cer', '.pem', '.der'},
+    'script': {'.js', '.ps1', '.vbs', '.bat', '.py', '.txt'},
+    'binary': {'.bin', '.exe', '.dll', '.img', '.raw', '.dd'},
+    'malware': {'.exe', '.dll', '.bin', '.dat', '.tmp', '.zip'}
 }
 
 
@@ -402,6 +413,346 @@ def analyze_url():
                 'verdicts': verdicts
             },
             'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/yara/scan', methods=['POST'])
+def scan_with_yara():
+    """
+    Scan files or directories with YARA rules
+
+    Request: multipart/form-data with file upload OR JSON with file_path
+
+    Returns:
+        JSON with YARA scan results
+    """
+    try:
+        file_path = None
+        rules_path = request.form.get('rules_path', 'yaraScanner/rules')
+        scan_type = request.form.get('scan_type', 'file')
+
+        # Handle file upload
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and allowed_file(file.filename, 'malware'):
+                temp_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+                file.save(temp_path)
+                file_path = temp_path
+
+        # Handle JSON input
+        if not file_path:
+            data = request.get_json() or {}
+            file_path = data.get('file_path')
+            rules_path = data.get('rules_path', 'yaraScanner/rules')
+
+        if not file_path:
+            return jsonify({'error': 'No file provided'}), 400
+
+        # Scan with YARA
+        scanner = YARAScanner(rules_path=rules_path)
+        results = scanner.scan_file(file_path) if scan_type == 'file' else scanner.scan_directory(file_path)
+
+        # Clean up temp file if uploaded
+        if 'file' in request.files and os.path.exists(file_path):
+            os.remove(file_path)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'statistics': {
+                'total_matches': len(results.get('matches', [])),
+                'files_scanned': results.get('files_scanned', 1),
+                'rules_loaded': results.get('rules_loaded', 0)
+            },
+            'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cert/analyze', methods=['POST'])
+def analyze_certificate():
+    """
+    Analyze SSL/TLS certificates
+
+    Request JSON:
+        {
+            "hostname": "example.com",
+            "port": 443
+        }
+    OR multipart/form-data with .crt/.pem file
+
+    Returns:
+        JSON with certificate analysis results
+    """
+    try:
+        # Handle file upload
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and allowed_file(file.filename, 'cert'):
+                cert_data = file.read()
+
+                analyzer = CertificateAnalyzer()
+                results = analyzer.analyze_certificate_data(cert_data)
+
+                response = {
+                    'success': True,
+                    'timestamp': datetime.utcnow().isoformat() + 'Z',
+                    'results': results
+                }
+
+                return jsonify(response)
+
+        # Handle hostname analysis
+        data = request.get_json() or {}
+        hostname = data.get('hostname')
+        port = data.get('port', 443)
+
+        if not hostname:
+            return jsonify({'error': 'No hostname or certificate file provided'}), 400
+
+        analyzer = CertificateAnalyzer()
+        results = analyzer.analyze_host(hostname, port)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/deobfuscate', methods=['POST'])
+def deobfuscate_script():
+    """
+    Deobfuscate malicious scripts
+
+    Request JSON:
+        {
+            "code": "obfuscated script code",
+            "language": "javascript" | "powershell" | "vbscript" | "batch" | "python" | "auto"
+        }
+    OR multipart/form-data with script file
+
+    Returns:
+        JSON with deobfuscated code and extracted IOCs
+    """
+    try:
+        code = None
+        language = 'auto'
+
+        # Handle file upload
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and allowed_file(file.filename, 'script'):
+                code = file.read().decode('utf-8', errors='ignore')
+                language = request.form.get('language', 'auto')
+
+        # Handle JSON input
+        if not code:
+            data = request.get_json() or {}
+            code = data.get('code')
+            language = data.get('language', 'auto')
+
+        if not code:
+            return jsonify({'error': 'No script code provided'}), 400
+
+        # Deobfuscate
+        deobfuscator = Deobfuscator()
+        results = deobfuscator.deobfuscate(code, language=language)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'statistics': {
+                'layers_decoded': results.get('layers', 0),
+                'iocs_found': len(results.get('iocs', {}).get('urls', [])) +
+                             len(results.get('iocs', {}).get('ips', [])) +
+                             len(results.get('iocs', {}).get('domains', []))
+            },
+            'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/threatfeed/search', methods=['POST'])
+def search_threat_feed():
+    """
+    Search threat feed database for IOCs
+
+    Request JSON:
+        {
+            "query": "search value",
+            "ioc_type": "domain" | "ip" | "url" | "hash",
+            "min_confidence": 50
+        }
+
+    Returns:
+        JSON with matching threat intelligence
+    """
+    try:
+        data = request.get_json() or {}
+        query = data.get('query')
+        ioc_type = data.get('ioc_type')
+        min_confidence = data.get('min_confidence', 0)
+
+        if not query:
+            return jsonify({'error': 'No search query provided'}), 400
+
+        aggregator = ThreatFeedAggregator()
+        results = aggregator.search(query, ioc_type=ioc_type, min_confidence=min_confidence)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'statistics': {
+                'total_matches': len(results),
+                'avg_confidence': sum(r.get('confidence', 0) for r in results) / len(results) if results else 0
+            },
+            'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/threatfeed/update', methods=['POST'])
+def update_threat_feeds():
+    """
+    Update threat feeds from all sources
+
+    Request JSON:
+        {
+            "sources": ["threatfox", "urlhaus"] # optional, updates all if not specified
+        }
+
+    Returns:
+        JSON with update statistics
+    """
+    try:
+        data = request.get_json() or {}
+        sources = data.get('sources')
+
+        aggregator = ThreatFeedAggregator()
+        results = aggregator.update_feeds(sources=sources)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'statistics': results.get('statistics', {}),
+            'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/carve/extract', methods=['POST'])
+def carve_files():
+    """
+    Extract files from disk images or binary data
+
+    Request: multipart/form-data with binary file
+
+    Returns:
+        JSON with extracted file information
+    """
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if not file or not allowed_file(file.filename, 'binary'):
+            return jsonify({'error': 'Invalid file type for carving'}), 400
+
+        # Save to temp file
+        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+        file.save(temp_path)
+
+        # Output directory for carved files
+        output_dir = os.path.join(app.config['UPLOAD_FOLDER'], f'carved_{os.getpid()}')
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Carve files
+        carver = FileCarver()
+        results = carver.carve(temp_path, output_dir=output_dir)
+
+        # Clean up input file
+        os.remove(temp_path)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'statistics': {
+                'total_files_carved': len(results.get('files', [])),
+                'file_types': results.get('file_types', {}),
+                'output_directory': output_dir
+            },
+            'results': results
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/pcap/analyze', methods=['POST'])
+def analyze_pcap():
+    """
+    Analyze network packet capture files
+
+    Request: multipart/form-data with .pcap/.pcapng file
+
+    Returns:
+        JSON with PCAP analysis results
+    """
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if not file or not allowed_file(file.filename, 'pcap'):
+            return jsonify({'error': 'Invalid file type. Expected .pcap or .pcapng'}), 400
+
+        # Save to temp file
+        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+        file.save(temp_path)
+
+        # Analyze PCAP
+        analyzer = PCAPAnalyzer()
+        results = analyzer.analyze(temp_path)
+
+        # Clean up
+        os.remove(temp_path)
+
+        response = {
+            'success': True,
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'statistics': results.get('statistics', {}),
+            'alerts': results.get('alerts', []),
+            'protocols': results.get('protocols', {}),
+            'top_talkers': results.get('top_talkers', [])
         }
 
         return jsonify(response)
