@@ -549,18 +549,36 @@ class InteractiveMenu:
 def print_usage():
     """Print usage information"""
     print("""
-SecOps Helper - Central Control System
+SecOps Helper - Security Operations Toolkit
+
+Quick Start:
+    secops analyze <input>      Auto-detect and analyze (RECOMMENDED)
+
+The 'analyze' command automatically detects what you're analyzing and runs
+the appropriate tools. Just give it a file, hash, IP, domain, or URL.
 
 Usage:
+    secops analyze <input>      Smart analysis (auto-detect input type)
     secops                      Interactive mode
     secops list                 List all available tools
     secops info <tool>          Show detailed tool information
     secops search <keyword>     Search for tools
-    secops <tool> [args]        Run a specific tool
+    secops <tool> [args]        Run a specific tool directly
     secops --help               Show this help message
     secops --version            Show version information
 
-Available Tools:
+Examples:
+    secops analyze suspicious.eml           # Analyze email file
+    secops analyze 44d88612fea8a8f36...     # Check hash reputation
+    secops analyze malicious.com            # Get domain intelligence
+    secops analyze 192.168.1.100            # Check IP reputation
+    secops analyze capture.pcap             # Analyze network traffic
+
+    secops analyze report.eml --json        # JSON output
+    secops analyze file.exe --verbose       # Detailed progress
+    secops analyze hash.txt --quiet         # Just verdict + score
+
+Individual Tools:
     eml          Email analysis and parsing
     ioc          IOC extraction from text
     hash         Hash reputation lookup
@@ -573,13 +591,6 @@ Available Tools:
     deobfuscate  Script deobfuscation
     threatfeed   Threat intelligence aggregation
     carve        File carving and extraction
-
-Examples:
-    secops                              # Start interactive menu
-    secops list                         # List all tools
-    secops info hash                    # Get info about hash tool
-    secops eml suspicious.eml --vt      # Run email parser
-    secops search malware               # Search for malware-related tools
 
 Documentation: https://github.com/Vligai/secops-helper
     """)
@@ -609,8 +620,8 @@ def main():
         sys.exit(0)
 
     elif sys.argv[1] in ['--version', '-v']:
-        print("SecOps Helper v3.0.0")
-        print("All 12 tools implemented - Phase 4 Complete")
+        print("SecOps Helper v4.0.0")
+        print("Phase 5: Operationalization - Smart analyze command")
         sys.exit(0)
 
     elif sys.argv[1] == 'list':
@@ -664,6 +675,71 @@ def main():
                 status = "✓" if tool['available'] else "✗"
                 print(f"  [{status}] {tool_id:12s} - {tool['name']}")
                 print(f"      {tool['description']}\n")
+
+    elif sys.argv[1] == 'analyze':
+        # Smart analyze command - auto-detect and run appropriate tools
+        if len(sys.argv) < 3:
+            print("Usage: secops analyze <input> [--verbose] [--json] [--quiet]", file=sys.stderr)
+            print("\nExamples:", file=sys.stderr)
+            print("  secops analyze suspicious.eml     # Auto-detect email", file=sys.stderr)
+            print("  secops analyze 44d88612...        # Auto-detect hash", file=sys.stderr)
+            print("  secops analyze malicious.com      # Auto-detect domain", file=sys.stderr)
+            print("  secops analyze 192.168.1.1        # Auto-detect IP", file=sys.stderr)
+            sys.exit(1)
+
+        try:
+            from core.analyzer import Analyzer
+            from core.reporter import Reporter
+
+            # Parse analyze arguments
+            input_value = sys.argv[2]
+            verbose = '--verbose' in sys.argv or '-v' in sys.argv[3:]
+            json_output = '--json' in sys.argv or '-j' in sys.argv
+            quiet = '--quiet' in sys.argv or '-q' in sys.argv
+
+            # Run analysis
+            analyzer = Analyzer(verbose=verbose)
+            result = analyzer.analyze(input_value)
+
+            # Format output
+            reporter = Reporter()
+
+            if quiet:
+                print(reporter.format_quiet(result['scorer']))
+            elif json_output:
+                print(reporter.format_json(
+                    result['input'],
+                    result['type'],
+                    result['scorer'],
+                    result['iocs'],
+                    result['tool_results']
+                ))
+            elif verbose:
+                print(reporter.format_verbose(
+                    result['input'],
+                    result['type'],
+                    result['scorer'],
+                    result['iocs'],
+                    result['tool_results']
+                ))
+            else:
+                print(reporter.format_console(
+                    result['input'],
+                    result['type'],
+                    result['scorer'],
+                    result['iocs'],
+                    result['tool_results']
+                ))
+
+            sys.exit(reporter.get_exit_code(result['scorer']))
+
+        except ImportError as e:
+            print(f"Error: Could not load analyzer module: {e}", file=sys.stderr)
+            print("Make sure core/ directory exists with analyzer.py", file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(f"Error during analysis: {e}", file=sys.stderr)
+            sys.exit(1)
 
     else:
         # Run a tool
