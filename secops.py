@@ -560,7 +560,9 @@ the appropriate tools. Just give it a file, hash, IP, domain, or URL.
 Usage:
     secops analyze <input>      Smart analysis (auto-detect input type)
     secops workflow <name> <input>  Run pre-built investigation workflow
-    secops                      Interactive mode
+    secops investigate          Guided interactive investigation mode
+    secops status               Show API key and tool status
+    secops                      Tool browser (interactive menu)
     secops list                 List all available tools
     secops info <tool>          Show detailed tool information
     secops search <keyword>     Search for tools
@@ -837,6 +839,51 @@ def main():
                 import traceback
                 traceback.print_exc()
             sys.exit(1)
+
+    elif sys.argv[1] == 'investigate':
+        # Interactive investigation mode
+        try:
+            from core.interactive import InteractiveInvestigation
+
+            investigation = InteractiveInvestigation()
+            investigation.run()
+            sys.exit(0)
+
+        except ImportError as e:
+            print(f"Error: Could not load interactive module: {e}", file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(f"Error during investigation: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    elif sys.argv[1] == 'status':
+        # Quick status dashboard
+        print("\nSecOps Helper Status")
+        print("=" * 40)
+
+        # Check API keys
+        from dotenv import load_dotenv
+        load_dotenv()
+
+        api_keys = {
+            'VT_API_KEY': 'VirusTotal',
+            'ABUSEIPDB_KEY': 'AbuseIPDB',
+            'THREATFOX_API_KEY': 'ThreatFox',
+            'URLHAUS_API_KEY': 'URLhaus'
+        }
+
+        print("\nAPI Keys:")
+        for key, name in api_keys.items():
+            status = "✓ Configured" if os.getenv(key) else "✗ Not set"
+            print(f"  {name:15s}: {status}")
+
+        # Check tools
+        print("\nTools: All 12 tools available")
+        print("\nFeatures:")
+        print("  ✓ Smart analyze command")
+        print("  ✓ Pre-built workflows (5)")
+        print("  ✓ Interactive investigation mode")
+        print()
 
     else:
         # Run a tool

@@ -7,6 +7,7 @@ from .detector import InputDetector, InputType
 from .scorer import RiskScorer, Severity, Verdict, Finding
 from .reporter import Reporter
 from .workflow import Workflow, WorkflowStep, WorkflowContext, WorkflowRegistry
+from .interactive import InteractiveInvestigation, ProgressBar
 
 __all__ = [
     'InputDetector',
@@ -19,5 +20,7 @@ __all__ = [
     'Workflow',
     'WorkflowStep',
     'WorkflowContext',
-    'WorkflowRegistry'
+    'WorkflowRegistry',
+    'InteractiveInvestigation',
+    'ProgressBar'
 ]
