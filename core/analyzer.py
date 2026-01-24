@@ -157,7 +157,7 @@ class Analyzer:
         if self.available_tools.get('domain_intel'):
             try:
                 self._log("Running domain/IP intelligence...")
-                from domainIpIntel.intel import DomainIPIntel
+                from domainIpIntel.intel import DomainIPIntelligence as DomainIPIntel
 
                 intel = DomainIPIntel(verbose=self.verbose)
                 result = intel.lookup(ip)
@@ -179,7 +179,7 @@ class Analyzer:
         if self.available_tools.get('domain_intel'):
             try:
                 self._log("Running domain/IP intelligence...")
-                from domainIpIntel.intel import DomainIPIntel
+                from domainIpIntel.intel import DomainIPIntelligence as DomainIPIntel
 
                 intel = DomainIPIntel(verbose=self.verbose)
                 result = intel.lookup(domain)
@@ -247,7 +247,8 @@ class Analyzer:
                 extractor = IOCExtractor(exclude_private_ips=True)
                 ioc_result = extractor.extract_from_file(file_path)
 
-                iocs['hashes'] = ioc_result.get('md5', []) + ioc_result.get('sha1', []) + ioc_result.get('sha256', [])
+                hash_results = ioc_result.get('hashes', {})
+                iocs['hashes'] = hash_results.get('md5', []) + hash_results.get('sha1', []) + hash_results.get('sha256', [])
                 iocs['domains'] = ioc_result.get('domains', [])
                 iocs['ips'] = ioc_result.get('ips', [])
                 iocs['urls'] = ioc_result.get('urls', [])
@@ -430,7 +431,8 @@ class Analyzer:
                 extractor = IOCExtractor(exclude_private_ips=True)
                 ioc_result = extractor.extract_from_file(file_path)
 
-                iocs['hashes'] = ioc_result.get('md5', []) + ioc_result.get('sha1', []) + ioc_result.get('sha256', [])
+                hash_results = ioc_result.get('hashes', {})
+                iocs['hashes'] = hash_results.get('md5', []) + hash_results.get('sha1', []) + hash_results.get('sha256', [])
                 iocs['domains'] = ioc_result.get('domains', [])
                 iocs['ips'] = ioc_result.get('ips', [])
                 iocs['urls'] = ioc_result.get('urls', [])
