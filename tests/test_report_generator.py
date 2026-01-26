@@ -10,10 +10,10 @@ import os
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from core.report_generator import ReportGenerator, ReportData
-from core.scorer import RiskScorer, Severity, Verdict
+from secops_helper.core.report_generator import ReportGenerator, ReportData
+from secops_helper.core.scorer import RiskScorer, Severity, Verdict
 
 
 class TestReportGeneratorInit:

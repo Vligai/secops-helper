@@ -13,8 +13,8 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 from io import StringIO
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 
 class TestCheckCommandRouting:

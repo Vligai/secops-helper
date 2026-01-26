@@ -9,12 +9,12 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from iocExtractor.extractor import IOCExtractor
-from hashLookup.lookup import HashValidator
-from domainIpIntel.intel import Validator, DomainIPIntelligence
+from secops_helper.tools.ioc_extractor import IOCExtractor
+from secops_helper.tools.hash_lookup import HashValidator
+from secops_helper.tools.domain_ip_intel import Validator, DomainIPIntelligence
 
 
 class TestIOCWorkflow:

@@ -9,10 +9,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from collections import defaultdict
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from pcapAnalyzer.analyzer import PCAPAnalyzer, format_output_json, format_output_csv, format_output_text
+from secops_helper.tools.pcap_analyzer import PCAPAnalyzer, format_output_json, format_output_csv, format_output_text
 
 
 class TestPCAPAnalyzer:
@@ -36,7 +36,7 @@ class TestPCAPAnalyzer:
 
         assert result is False
 
-    @patch("pcapAnalyzer.analyzer.SCAPY_AVAILABLE", False)
+    @patch("secops_helper.tools.pcap_analyzer.SCAPY_AVAILABLE", False)
     def test_load_pcap_no_scapy(self):
         """Test loading PCAP without scapy installed"""
         analyzer = PCAPAnalyzer()
@@ -45,8 +45,8 @@ class TestPCAPAnalyzer:
 
         assert result is False
 
-    @patch("pcapAnalyzer.analyzer.rdpcap")
-    @patch("pcapAnalyzer.analyzer.SCAPY_AVAILABLE", True)
+    @patch("secops_helper.tools.pcap_analyzer.rdpcap")
+    @patch("secops_helper.tools.pcap_analyzer.SCAPY_AVAILABLE", True)
     def test_load_pcap_success(self, mock_rdpcap):
         """Test successful PCAP loading"""
         mock_packets = [Mock(), Mock(), Mock()]
@@ -77,7 +77,7 @@ class TestPCAPAnalyzer:
         assert "error" in result
         assert "No packets" in result["error"]
 
-    @patch("pcapAnalyzer.analyzer.IP")
+    @patch("secops_helper.tools.pcap_analyzer.IP")
     def test_analyze_packet_non_ip(self, mock_ip):
         """Test analyzing non-IP packet"""
         analyzer = PCAPAnalyzer()
@@ -92,8 +92,8 @@ class TestPCAPAnalyzer:
         assert analyzer.stats["total_bytes"] == 100
         assert analyzer.stats["protocols"]["non-ip"] == 1
 
-    @patch("pcapAnalyzer.analyzer.TCP")
-    @patch("pcapAnalyzer.analyzer.IP")
+    @patch("secops_helper.tools.pcap_analyzer.TCP")
+    @patch("secops_helper.tools.pcap_analyzer.IP")
     def test_analyze_tcp_packet(self, mock_ip, mock_tcp):
         """Test analyzing TCP packet"""
         analyzer = PCAPAnalyzer()
@@ -116,8 +116,8 @@ class TestPCAPAnalyzer:
         assert "192.0.2.1" in analyzer.stats["src_ips"]
         assert "198.51.100.25" in analyzer.stats["dst_ips"]
 
-    @patch("pcapAnalyzer.analyzer.UDP")
-    @patch("pcapAnalyzer.analyzer.IP")
+    @patch("secops_helper.tools.pcap_analyzer.UDP")
+    @patch("secops_helper.tools.pcap_analyzer.IP")
     def test_analyze_udp_packet(self, mock_ip, mock_udp):
         """Test analyzing UDP packet"""
         analyzer = PCAPAnalyzer()
@@ -136,8 +136,8 @@ class TestPCAPAnalyzer:
 
         assert analyzer.stats["protocols"]["UDP"] == 1
 
-    @patch("pcapAnalyzer.analyzer.Raw")
-    @patch("pcapAnalyzer.analyzer.TCP")
+    @patch("secops_helper.tools.pcap_analyzer.Raw")
+    @patch("secops_helper.tools.pcap_analyzer.TCP")
     def test_analyze_tcp_port_scan_detection(self, mock_tcp, mock_raw):
         """Test port scan detection"""
         analyzer = PCAPAnalyzer()
@@ -164,7 +164,7 @@ class TestPCAPAnalyzer:
         assert len(port_scan_alerts) > 0
         assert port_scan_alerts[0]["source_ip"] == "203.0.113.100"
 
-    @patch("pcapAnalyzer.analyzer.Raw")
+    @patch("secops_helper.tools.pcap_analyzer.Raw")
     def test_analyze_http_sql_injection(self, mock_raw_cls):
         """Test HTTP SQL injection detection"""
         analyzer = PCAPAnalyzer()
@@ -184,7 +184,7 @@ class TestPCAPAnalyzer:
         assert len(sql_alerts) > 0
         assert sql_alerts[0]["severity"] == "high"
 
-    @patch("pcapAnalyzer.analyzer.Raw")
+    @patch("secops_helper.tools.pcap_analyzer.Raw")
     def test_analyze_http_xss(self, mock_raw_cls):
         """Test HTTP XSS detection"""
         analyzer = PCAPAnalyzer()
@@ -203,7 +203,7 @@ class TestPCAPAnalyzer:
         xss_alerts = [a for a in analyzer.alerts if "xss" in a["type"].lower()]
         assert len(xss_alerts) > 0
 
-    @patch("pcapAnalyzer.analyzer.Raw")
+    @patch("secops_helper.tools.pcap_analyzer.Raw")
     def test_analyze_http_path_traversal(self, mock_raw_cls):
         """Test HTTP path traversal detection"""
         analyzer = PCAPAnalyzer()
@@ -222,8 +222,8 @@ class TestPCAPAnalyzer:
         path_alerts = [a for a in analyzer.alerts if "traversal" in a["type"].lower()]
         assert len(path_alerts) > 0
 
-    @patch("pcapAnalyzer.analyzer.DNSQR")
-    @patch("pcapAnalyzer.analyzer.DNS")
+    @patch("secops_helper.tools.pcap_analyzer.DNSQR")
+    @patch("secops_helper.tools.pcap_analyzer.DNS")
     def test_analyze_dns_suspicious_tld(self, mock_dns, mock_dnsqr):
         """Test DNS analysis for suspicious TLDs"""
         analyzer = PCAPAnalyzer()
@@ -246,8 +246,8 @@ class TestPCAPAnalyzer:
         assert len(suspicious_alerts) > 0
         assert ".tk" in suspicious_alerts[0]["domain"]
 
-    @patch("pcapAnalyzer.analyzer.DNSQR")
-    @patch("pcapAnalyzer.analyzer.DNS")
+    @patch("secops_helper.tools.pcap_analyzer.DNSQR")
+    @patch("secops_helper.tools.pcap_analyzer.DNS")
     def test_analyze_dns_dga(self, mock_dns, mock_dnsqr):
         """Test DNS analysis for potential DGA"""
         analyzer = PCAPAnalyzer()

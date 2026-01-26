@@ -7,10 +7,10 @@ import pytest
 import sys
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from iocExtractor.extractor import IOCExtractor
+from secops_helper.tools.ioc_extractor import IOCExtractor
 
 
 class TestIOCExtractor:

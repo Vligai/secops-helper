@@ -11,11 +11,11 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from core.workflow import Workflow, WorkflowStep, StepResult, WorkflowContext, WorkflowRegistry, workflow
-from core.scorer import Severity
+from secops_helper.core.workflow import Workflow, WorkflowStep, StepResult, WorkflowContext, WorkflowRegistry, workflow
+from secops_helper.core.scorer import Severity
 
 
 class TestWorkflowStep:

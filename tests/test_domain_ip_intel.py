@@ -8,10 +8,10 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from domainIpIntel.intel import Validator, DNSLookup, RiskScorer, AbuseIPDBAPI, VirusTotalAPI, DomainIPIntelligence
+from secops_helper.tools.domain_ip_intel import Validator, DNSLookup, RiskScorer, AbuseIPDBAPI, VirusTotalAPI, DomainIPIntelligence
 
 
 class TestValidator:
@@ -112,8 +112,8 @@ class TestDNSLookup:
         result = DNSLookup.resolve_ptr("192.0.2.1")
         assert result is None
 
-    @patch("domainIpIntel.intel.DNSLookup.resolve_ptr")
-    @patch("domainIpIntel.intel.DNSLookup.resolve_a")
+    @patch("secops_helper.tools.domain_ip_intel.DNSLookup.resolve_ptr")
+    @patch("secops_helper.tools.domain_ip_intel.DNSLookup.resolve_a")
     def test_get_dns_info(self, mock_resolve_a, mock_resolve_ptr):
         """Test comprehensive DNS info retrieval"""
         mock_resolve_a.return_value = ["93.184.216.34"]
@@ -330,7 +330,7 @@ class TestDomainIPIntelligence:
         assert result["type"] == "invalid"
         assert "error" in result
 
-    @patch("domainIpIntel.intel.DNSLookup.resolve_ptr")
+    @patch("secops_helper.tools.domain_ip_intel.DNSLookup.resolve_ptr")
     def test_analyze_private_ip(self, mock_resolve_ptr):
         """Test analysis of private IP"""
         intel = DomainIPIntelligence()
@@ -342,9 +342,9 @@ class TestDomainIPIntelligence:
         # Should not have threat intelligence for private IPs
         assert "threat_intelligence" not in result
 
-    @patch("domainIpIntel.intel.VirusTotalAPI")
-    @patch("domainIpIntel.intel.AbuseIPDBAPI")
-    @patch("domainIpIntel.intel.DNSLookup.resolve_ptr")
+    @patch("secops_helper.tools.domain_ip_intel.VirusTotalAPI")
+    @patch("secops_helper.tools.domain_ip_intel.AbuseIPDBAPI")
+    @patch("secops_helper.tools.domain_ip_intel.DNSLookup.resolve_ptr")
     def test_analyze_public_ip(self, mock_resolve_ptr, mock_abuseipdb, mock_vt):
         """Test analysis of public IP with mocked APIs"""
         # Mock PTR record
@@ -382,8 +382,8 @@ class TestDomainIPIntelligence:
         assert result["type"] == "invalid"
         assert "error" in result
 
-    @patch("domainIpIntel.intel.VirusTotalAPI")
-    @patch("domainIpIntel.intel.DNSLookup.get_dns_info")
+    @patch("secops_helper.tools.domain_ip_intel.VirusTotalAPI")
+    @patch("secops_helper.tools.domain_ip_intel.DNSLookup.get_dns_info")
     def test_analyze_valid_domain(self, mock_dns, mock_vt):
         """Test analysis of valid domain with mocked APIs"""
         # Mock DNS info

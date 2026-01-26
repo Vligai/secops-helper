@@ -3,6 +3,7 @@ SecOps Helper Core - Orchestration Engine
 Part of SecOps Helper Operationalization (Phase 5)
 """
 
+from .analyzer import Analyzer
 from .detector import InputDetector, InputType
 from .scorer import RiskScorer, Severity, Verdict, Finding
 from .reporter import Reporter
@@ -12,6 +13,7 @@ from .report_generator import ReportGenerator, ReportData
 from .history import AnalysisHistory
 
 __all__ = [
+    'Analyzer',
     'InputDetector',
     'InputType',
     'RiskScorer',

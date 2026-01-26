@@ -7,6 +7,6 @@ Entry points:
 """
 
 from .main import main
-# from .legacy import main as legacy_main  # Will be imported separately
+from .legacy import main as legacy_main
 
-__all__ = ['main']
+__all__ = ['main', 'legacy_main']

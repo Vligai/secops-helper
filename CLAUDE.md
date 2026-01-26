@@ -63,33 +63,9 @@ secops investigate   # Guided Q&A for users who don't know what they have
 3. Phase 3: Interactive Mode
 4. Phase 4: Reports and Polish
 
-### New Directory Structure (Phase 2 Complete)
-```
-secops-helper/
-├── core/                 # ✅ IMPLEMENTED - Orchestration engine
-│   ├── __init__.py       # Package exports
-│   ├── analyzer.py       # Smart analyze command
-│   ├── detector.py       # Input type detection
-│   ├── scorer.py         # Risk scoring
-│   ├── reporter.py       # Report generation
-│   └── workflow.py       # Workflow engine
-├── workflows/            # ✅ IMPLEMENTED - Pre-built workflows
-│   ├── __init__.py       # Package exports
-│   ├── phishing_email.py # Phishing investigation (7 steps)
-│   ├── malware_triage.py # Malware analysis (7 steps)
-│   ├── ioc_hunt.py       # Bulk IOC hunting (6 steps)
-│   ├── network_forensics.py  # PCAP forensics (7 steps)
-│   └── log_investigation.py  # Log analysis (7 steps)
-├── tests/                # ✅ IMPLEMENTED - Unit tests
-│   ├── test_detector.py  # Input detection tests
-│   ├── test_scorer.py    # Risk scoring tests
-│   ├── test_reporter.py  # Output formatting tests
-│   ├── test_analyzer.py  # Integration tests
-│   └── test_workflows.py # Workflow tests
-└── ... (existing tools)
-```
+## Repository Structure (v5.0 - Reorganized)
 
-## Repository Structure
+The project has been reorganized into a modern Python package structure:
 
 ```
 secops-helper/
@@ -97,98 +73,124 @@ secops-helper/
 ├── .gitignore             # Git ignore rules
 ├── LICENSE                # MIT License
 ├── README.md              # User-facing documentation
-├── requirements.txt       # Python dependencies
 ├── CLAUDE.md              # This file - AI assistant guide
-│
-├── secops                 # 🆕 Central control system shell wrapper
-├── secops.py              # 🆕 Central control system (Python)
-├── secops_helper.py       # Legacy unified CLI (still supported)
+├── pyproject.toml         # Modern Python packaging configuration
+├── requirements.txt       # Python dependencies (legacy support)
 │
 ├── openspec/              # Project specifications (OpenSpec format)
-│   ├── project.openspec.md           # Overall project spec
-│   └── specs/                        # Individual feature specs
-│       ├── operationalize.spec.md    # 🔥 ACTIVE - Phase 5 operationalization
-│       ├── eml-parser.spec.md
-│       ├── ioc-extractor.spec.md
-│       ├── hash-lookup.spec.md
-│       ├── domain-ip-intel.spec.md
-│       ├── log-analysis.spec.md
-│       ├── pcap-analyzer.spec.md
-│       ├── yara-scanner.spec.md
-│       ├── cert-analyzer.spec.md
-│       ├── deobfuscator.spec.md
-│       ├── threat-feed-aggregator.spec.md
-│       └── file-carver.spec.md
+│   ├── project.openspec.md
+│   └── specs/             # Individual feature specs
 │
-├── emlAnalysis/           # Email analysis tools
-│   └── emlParser.py       # ✅ IMPLEMENTED
+├── completions/           # Shell completions
+│   ├── secops.bash
+│   ├── secops.zsh
+│   └── secops.ps1
 │
-├── iocExtractor/          # IOC extraction tools
-│   └── extractor.py       # ✅ IMPLEMENTED
+├── tests/                 # Unit and integration tests
+│   ├── test_data/         # Sample files for testing
+│   ├── test_detector.py
+│   ├── test_scorer.py
+│   ├── test_reporter.py
+│   ├── test_analyzer.py
+│   ├── test_workflows.py
+│   └── ...
 │
-├── hashLookup/            # Hash threat intelligence
-│   └── lookup.py          # ✅ IMPLEMENTED
-│
-├── domainIpIntel/         # Domain/IP intelligence
-│   └── intel.py           # ✅ IMPLEMENTED
-│
-├── logAnalysis/           # Log analysis tools
-│   └── analyzer.py        # ✅ IMPLEMENTED
-│
-├── pcapAnalyzer/          # Network traffic analysis
-│   └── analyzer.py        # ✅ IMPLEMENTED
-│
-├── urlAnalyzer/           # URL threat analysis
-│   └── analyzer.py        # ✅ IMPLEMENTED
-│
-├── yaraScanner/           # YARA malware scanning
-│   ├── scanner.py         # ✅ IMPLEMENTED
-│   └── rules/             # YARA rule repository
-│       ├── malware/       # Malware detection rules
-│       └── apt/           # APT indicators
-│
-├── certAnalyzer/          # Certificate analysis
-│   └── analyzer.py        # ✅ IMPLEMENTED
-│
-├── deobfuscator/          # Script deobfuscation
-│   └── deobfuscator.py    # ✅ IMPLEMENTED
-│
-├── threatFeedAggregator/  # Threat intelligence aggregation
-│   └── aggregator.py      # ✅ IMPLEMENTED
-│
-└── fileCarver/            # Forensic file extraction
-    └── carver.py          # ✅ IMPLEMENTED
+└── src/                   # Main source code
+    └── secops_helper/     # Main package
+        ├── __init__.py    # Package exports and version
+        │
+        ├── cli/           # Command-line interfaces
+        │   ├── __init__.py
+        │   ├── main.py    # Primary CLI (secops command)
+        │   └── legacy.py  # Legacy CLI (secops-helper command)
+        │
+        ├── core/          # Orchestration engine
+        │   ├── __init__.py
+        │   ├── analyzer.py     # Smart analyze command
+        │   ├── detector.py     # Input type detection
+        │   ├── scorer.py       # Risk scoring
+        │   ├── reporter.py     # Report generation
+        │   ├── workflow.py     # Workflow engine
+        │   ├── interactive.py  # Interactive mode
+        │   ├── report_generator.py  # HTML/MD reports
+        │   └── history.py      # Analysis history
+        │
+        ├── tools/         # Individual security tools
+        │   ├── __init__.py     # Tool registry
+        │   ├── eml_parser.py   # Email analysis
+        │   ├── ioc_extractor.py    # IOC extraction
+        │   ├── hash_lookup.py      # Hash intelligence
+        │   ├── domain_ip_intel.py  # Domain/IP intel
+        │   ├── log_analyzer.py     # Log analysis
+        │   ├── pcap_analyzer.py    # PCAP analysis
+        │   ├── url_analyzer.py     # URL analysis
+        │   ├── yara_scanner.py     # YARA scanning
+        │   ├── cert_analyzer.py    # Certificate analysis
+        │   ├── deobfuscator.py     # Script deobfuscation
+        │   ├── threat_feed_aggregator.py  # Threat feeds
+        │   └── file_carver.py      # File carving
+        │
+        ├── workflows/     # Pre-built investigation workflows
+        │   ├── __init__.py
+        │   ├── phishing_email.py
+        │   ├── malware_triage.py
+        │   ├── ioc_hunt.py
+        │   ├── network_forensics.py
+        │   └── log_investigation.py
+        │
+        ├── common/        # Shared utilities
+        │   ├── __init__.py
+        │   ├── cache_manager.py  # Redis caching
+        │   └── stix_export.py    # STIX 2.1 export
+        │
+        ├── data/          # Package data files
+        │   └── yara_rules/    # YARA rule repository
+        │       ├── malware/
+        │       └── apt/
+        │
+        └── webapp/        # Web interface (future)
+            ├── static/
+            └── templates/
 ```
+
+### Key Changes in v5.0
+- All code moved to `src/secops_helper/` for proper package structure
+- Entry points defined in `pyproject.toml` (`secops` and `secops-helper` commands)
+- Tool files renamed to snake_case (e.g., `hash_lookup.py` instead of `lookup.py`)
+- Imports changed from `from hashLookup.lookup import X` to `from secops_helper.tools.hash_lookup import X`
+- YARA rules moved to `src/secops_helper/data/yara_rules/`
 
 ## Implementation Status
 
+All tools are now located in `src/secops_helper/tools/`:
+
 ### ✅ Phase 1 (Completed)
-- **EML Parser** (`emlAnalysis/emlParser.py`)
+- **EML Parser** (`tools/eml_parser.py`)
   - Email metadata extraction
   - Header analysis (SPF/DKIM/DMARC)
   - Attachment hashing
   - VirusTotal integration
 
 ### ✅ Phase 2 (Completed)
-- **IOC Extractor** (`iocExtractor/extractor.py`)
+- **IOC Extractor** (`tools/ioc_extractor.py`)
   - Extract IPs, domains, URLs, emails, hashes, CVEs
   - Defang/refang capabilities
   - Multiple output formats
 
-- **Hash Lookup** (`hashLookup/lookup.py`)
+- **Hash Lookup** (`tools/hash_lookup.py`)
   - Multi-source threat intelligence (VT, MalwareBazaar)
   - SQLite caching
   - Rate limiting
   - Batch processing
 
-- **Domain/IP Intelligence** (`domainIpIntel/intel.py`)
+- **Domain/IP Intelligence** (`tools/domain_ip_intel.py`)
   - DNS resolution
   - Threat intelligence (VT, AbuseIPDB)
   - Risk scoring
   - Auto IP/domain detection
 
 ### ✅ Phase 3 (Completed)
-- **Log Analysis** (`logAnalysis/analyzer.py`)
+- **Log Analysis** (`tools/log_analyzer.py`)
   - Apache/Nginx log parsing
   - Syslog parsing
   - Web attack detection (SQL injection, XSS, path traversal)
@@ -196,7 +198,7 @@ secops-helper/
   - Scanner detection
   - Traffic statistics
 
-- **PCAP Analyzer** (`pcapAnalyzer/analyzer.py`)
+- **PCAP Analyzer** (`tools/pcap_analyzer.py`)
   - PCAP/PCAPNG file parsing
   - Protocol analysis (TCP, UDP, DNS)
   - Traffic statistics
@@ -204,7 +206,7 @@ secops-helper/
   - DNS threat detection (DGA, suspicious TLDs)
   - HTTP payload inspection
 
-- **URL Analyzer** (`urlAnalyzer/analyzer.py`)
+- **URL Analyzer** (`tools/url_analyzer.py`)
   - Multi-source threat intelligence (VirusTotal, URLhaus)
   - Suspicious pattern detection (11 different checks)
   - Redis caching with 24-hour TTL
@@ -212,7 +214,7 @@ secops-helper/
   - Multiple output formats
 
 ### ✅ Phase 4 (Completed)
-- **YARA Scanner** (`yaraScanner/scanner.py`)
+- **YARA Scanner** (`tools/yara_scanner.py`)
   - Multi-format scanning (files, directories, PCAP, memory dumps)
   - Rule validation and compilation
   - Batch scanning with multi-threading
@@ -220,7 +222,7 @@ secops-helper/
   - Match analysis with detailed metadata
   - Integrated with unified CLI
 
-- **Certificate Analyzer** (`certAnalyzer/analyzer.py`)
+- **Certificate Analyzer** (`tools/cert_analyzer.py`)
   - Certificate retrieval from HTTPS servers and files
   - Comprehensive information extraction
   - Chain validation and hostname verification
@@ -229,7 +231,7 @@ secops-helper/
   - Certificate Transparency log queries
   - Risk scoring and verdict classification
 
-- **Deobfuscator** (`deobfuscator/deobfuscator.py`)
+- **Deobfuscator** (`tools/deobfuscator.py`)
   - Multi-language support (JavaScript, PowerShell, VBScript, Batch, Python)
   - Auto-detect script language
   - Multi-layer deobfuscation (up to 10 layers)
@@ -238,7 +240,7 @@ secops-helper/
   - JavaScript-specific: String.fromCharCode(), escape sequences
   - Automatic IOC extraction from deobfuscated code
 
-- **Threat Feed Aggregator** (`threatFeedAggregator/aggregator.py`)
+- **Threat Feed Aggregator** (`tools/threat_feed_aggregator.py`)
   - Multi-source threat intelligence (ThreatFox, URLhaus)
   - SQLite storage backend with full schema
   - Automatic deduplication by IOC hash
@@ -247,7 +249,7 @@ secops-helper/
   - Export to JSON and CSV
   - Statistics and metrics dashboard
 
-- **File Carver** (`fileCarver/carver.py`)
+- **File Carver** (`tools/file_carver.py`)
   - Extract files from disk images, memory dumps, binary files
   - 25+ file type signatures (images, documents, archives, executables)
   - Magic bytes detection (headers and footers)
@@ -255,73 +257,28 @@ secops-helper/
   - Organized output by file type
   - Chunked processing for large files
 
-## Central Control System (NEW!)
+## CLI Usage
 
-The **SecOps Helper Central Control System** (`secops.py` and `secops` shell wrapper) provides a unified interface for discovering, managing, and executing all 12 security tools.
+After installation (`pip install -e .`), the tools are available via command-line:
 
-### Key Features
+```bash
+# Primary CLI (smart analysis)
+secops analyze suspicious.eml    # Auto-detects input type
+secops analyze 44d88612...       # Hash lookup
+secops analyze malicious.com     # Domain intel
 
-1. **Automatic Tool Discovery**
-   - Scans repository structure and catalogs all available tools
-   - Verifies tool availability and reports status
-   - Dynamically loads tool modules on demand
+# Workflows
+secops workflow phishing-email suspicious.eml
+secops workflow malware-triage sample.exe
 
-2. **Interactive Menu System**
-   - User-friendly text-based interface
-   - Browse tools by category (Email, Malware, Network, etc.)
-   - Search tools by keywords
-   - View detailed tool information
-   - Check API key configuration status
+# Individual tools
+secops hash 44d88612fea8a8f36de82e1278abb02f
+secops intel malicious.com
+secops ioc --file report.txt
 
-3. **Smart Search**
-   - Search across tool names, descriptions, and keywords
-   - Returns relevant tools with category and status
-   - Example: `./secops search malware` finds YARA Scanner, Deobfuscator, and related tools
-
-4. **Unified Documentation**
-   - Built-in help for every tool
-   - Usage examples included
-   - API key requirements clearly displayed
-   - Quick start guide accessible from menu
-
-5. **Command-Line Interface**
-   ```bash
-   ./secops                    # Launch interactive menu
-   ./secops list               # List all tools with categories
-   ./secops info <tool>        # Show detailed tool information
-   ./secops search <keyword>   # Search for tools
-   ./secops <tool> [args]      # Run a tool directly
-   ./secops --version          # Show version information
-   ```
-
-### Architecture
-
-The central control system uses a modular architecture:
-
+# Legacy CLI (also available)
+secops-helper hash 44d88612fea8a8f36de82e1278abb02f
 ```
-secops (shell wrapper)
-  └── secops.py (main control system)
-      ├── ToolDiscovery     # Auto-discover and catalog tools
-      ├── ToolManager       # Dynamic module loading and execution
-      └── InteractiveMenu   # User interface and navigation
-```
-
-**ToolDiscovery Class:**
-- Maintains metadata for all 12 tools
-- Verifies file existence and availability
-- Organizes tools by category
-- Provides search and filtering capabilities
-
-**ToolManager Class:**
-- Dynamically imports tool modules using `importlib`
-- Reconstructs command-line arguments for each tool
-- Handles errors gracefully with clear messages
-
-**InteractiveMenu Class:**
-- Displays categorized tool listings
-- Provides search interface
-- Shows API key configuration status
-- Includes quick start guide
 
 ### Tool Categories
 
@@ -338,46 +295,45 @@ The central system organizes tools into 7 categories:
 ### Usage Examples
 
 ```bash
-# Interactive mode - recommended for exploration
-./secops
+# Smart analysis with auto-detection
+secops analyze suspicious.eml --verbose
+secops analyze 44d88612fea8a8f36de82e1278abb02f
+secops analyze malicious.com --json
 
-# List all tools with status indicators
-./secops list
+# Pre-built workflows
+secops workflow phishing-email suspicious.eml
+secops workflow malware-triage sample.exe
+secops workflow ioc-hunt iocs.txt
 
-# Search for tools related to malware
-./secops search malware
-# Returns: YARA Scanner, Deobfuscator, Hash Lookup
+# Individual tools
+secops hash 44d88612fea8a8f36de82e1278abb02f
+secops intel malicious.com
+secops yara scan /samples/ --rules rules/malware/
+secops cert https://example.com
+secops ioc --file threat_report.txt
 
-# Get detailed information about a tool
-./secops info hash
-# Shows: Description, examples, API requirements, keywords
-
-# Run tools directly through the control system
-./secops eml suspicious.eml --vt
-./secops hash 44d88612fea8a8f36de82e1278abb02f
-./secops yara scan /samples/ --rules ./yaraScanner/rules/
-./secops cert https://example.com
+# Help and information
+secops --help
+secops hash --help
 ```
 
-### Why Use the Central Control System?
+### Installation
 
-**Benefits over direct tool execution:**
-- ✅ **Discoverability**: Easily find the right tool for your task
-- ✅ **Documentation**: Built-in help and examples
-- ✅ **Consistency**: Uniform interface across all tools
-- ✅ **Efficiency**: No need to remember paths or command syntax
-- ✅ **Validation**: Check API key status before running tools
-- ✅ **Flexibility**: Interactive mode for exploration, CLI for automation
+```bash
+# Install in development mode
+pip install -e .
 
-**When to recommend it:**
-- User is new to SecOps Helper
-- User is unsure which tool to use
-- User wants to explore available capabilities
-- User needs to check tool availability or API configuration
+# Install with optional dependencies
+pip install -e ".[all]"     # All optional dependencies
+pip install -e ".[dev]"     # Development dependencies
+pip install -e ".[yara]"    # YARA support
+pip install -e ".[pcap]"    # PCAP analysis support
 
-**Legacy options still supported:**
-- Direct tool execution: `python hashLookup/lookup.py <hash>`
-- Unified CLI: `python secops_helper.py hash <hash>`
+# Or install from requirements
+pip install -r requirements.txt
+```
+
+After installation, `secops` and `secops-helper` commands are available globally.
 
 ## Code Conventions
 
@@ -416,11 +372,12 @@ if __name__ == '__main__':
 
 ### Naming Conventions
 
-- **Files**: `toolName.py` or `analyzer.py` (lowercase, descriptive)
+- **Files**: `snake_case.py` (e.g., `hash_lookup.py`, `domain_ip_intel.py`)
 - **Classes**: `PascalCase` (e.g., `IOCExtractor`, `HashValidator`)
 - **Functions**: `snake_case` (e.g., `extract_from_text`, `parse_args`)
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `PATTERNS`, `API_BASE_URL`)
 - **Private methods**: `_leading_underscore` (e.g., `_is_private_ip`)
+- **Packages**: `snake_case` (e.g., `secops_helper`)
 
 ### Command-Line Interface Pattern
 
@@ -1081,9 +1038,9 @@ See `openspec/specs/operationalize.spec.md` for full details.
 
 ---
 
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-26
 **Maintained By:** Vligai
-**Version:** 4.0.0-dev (Phase 5: Operationalization in Progress)
+**Version:** 5.0.0 (Reorganized package structure)
 
 This document should be updated whenever:
 - New tools are added

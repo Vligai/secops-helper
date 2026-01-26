@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "secops-helper"
-version = "4.0.0"
+version = "5.0.0"
 description = "Security operations toolkit for threat analysis and incident response"
 readme = "README.md"
 license = {text = "MIT"}
@@ -99,7 +99,13 @@ where = ["src"]
 include = ["secops_helper*"]
 
 [tool.setuptools.package-data]
-secops_helper = ["py.typed"]
+secops_helper = [
+    "py.typed",
+    "data/yara_rules/**/*.yar",
+    "data/yara_rules/**/*.yara",
+    "webapp/static/**/*",
+    "webapp/templates/**/*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

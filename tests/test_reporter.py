@@ -9,11 +9,11 @@ import sys
 import json
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from core.reporter import Reporter, Colors
-from core.scorer import RiskScorer, Severity, Verdict
+from secops_helper.core.reporter import Reporter, Colors
+from secops_helper.core.scorer import RiskScorer, Severity, Verdict
 
 
 class TestColors:

@@ -10,10 +10,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch, mock_open
 from datetime import datetime
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from emlAnalysis.emlParser import (
+from secops_helper.tools.eml_parser import (
     parse_eml,
     extract_basic_headers,
     extract_ips_and_servers,
@@ -206,7 +206,7 @@ class TestExtractAttachments:
 
         assert result == []
 
-    @patch("emlAnalysis.emlParser.vt_lookup_sha256")
+    @patch("secops_helper.tools.eml_parser.vt_lookup_sha256")
     def test_extract_attachments_with_vt(self, mock_vt):
         """Test attachment extraction with VT lookup"""
         mock_vt.return_value = {"VT_Malicious": 5, "VT_Suspicious": 2, "VT_Link": "https://www.virustotal.com/gui/file/abc123"}
@@ -324,7 +324,7 @@ class TestVirusTotalLookup:
         mock_get.return_value = mock_response
 
         # Mock environment variable
-        with patch("emlAnalysis.emlParser.VT_API_KEY", "test_key"):
+        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("abc123def456")
 
         assert result["VT_Malicious"] == 10
@@ -338,7 +338,7 @@ class TestVirusTotalLookup:
         mock_response.status_code = 404
         mock_get.return_value = mock_response
 
-        with patch("emlAnalysis.emlParser.VT_API_KEY", "test_key"):
+        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("nonexistent_hash")
 
         assert "VT_Error" in result
@@ -349,7 +349,7 @@ class TestVirusTotalLookup:
         """Test VT lookup with network error"""
         mock_get.side_effect = Exception("Network error")
 
-        with patch("emlAnalysis.emlParser.VT_API_KEY", "test_key"):
+        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("abc123")
 
         assert "VT_Error" in result
@@ -357,14 +357,14 @@ class TestVirusTotalLookup:
 
     def test_vt_lookup_no_api_key(self):
         """Test VT lookup without API key"""
-        with patch("emlAnalysis.emlParser.VT_API_KEY", None):
+        with patch("secops_helper.tools.eml_parser.VT_API_KEY", None):
             result = vt_lookup_sha256("abc123")
 
         assert result == {}
 
     def test_vt_lookup_invalid_hash(self):
         """Test VT lookup with invalid hash"""
-        with patch("emlAnalysis.emlParser.VT_API_KEY", "test_key"):
+        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("N/A")
 
         assert result == {}

@@ -10,10 +10,10 @@ import os
 import tempfile
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add src directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from core.detector import InputDetector, InputType
+from secops_helper.core.detector import InputDetector, InputType
 
 
 class TestHashDetection:
