@@ -1,45 +1,122 @@
-[tool.bandit]
-exclude_dirs = ["tests", "venv", "env", ".venv", ".tox"]
-skips = ["B101", "B601"]  # Skip assert_used and subprocess warnings in tests
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 127
-target-version = ['py39', 'py310', 'py311']
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | \.tox
-  | venv
-  | env
-  | __pycache__
-  | build
-  | dist
-)/
-'''
+[project]
+name = "secops-helper"
+version = "4.0.0"
+description = "Security operations toolkit for threat analysis and incident response"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Vligai"}
+]
+maintainers = [
+    {name = "Vligai"}
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Topic :: Security",
+    "Topic :: System :: Monitoring",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+keywords = [
+    "security",
+    "secops",
+    "threat-intelligence",
+    "ioc",
+    "incident-response",
+    "soc",
+    "malware-analysis",
+    "cybersecurity",
+]
 
-[tool.isort]
-profile = "black"
-line_length = 127
-skip_gitignore = true
-known_first_party = ["emlAnalysis", "iocExtractor", "hashLookup", "domainIpIntel", "logAnalysis", "pcapAnalyzer"]
+dependencies = [
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+cache = [
+    "redis>=5.0.0",
+]
+email = [
+    "eml-parser>=1.17.0",
+]
+pcap = [
+    "scapy>=2.5.0",
+]
+yara = [
+    "yara-python>=4.3.0",
+    "tqdm>=4.66.0",
+]
+cert = [
+    "cryptography>=41.0.0",
+]
+all = [
+    "redis>=5.0.0",
+    "eml-parser>=1.17.0",
+    "scapy>=2.5.0",
+    "yara-python>=4.3.0",
+    "tqdm>=4.66.0",
+    "cryptography>=41.0.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "black>=23.9.1",
+    "flake8>=6.1.0",
+    "isort>=5.12.0",
+    "pre-commit>=3.4.0",
+    "bandit>=1.7.5",
+]
+
+[project.scripts]
+secops = "secops_helper.cli.main:main"
+secops-helper = "secops_helper.cli.legacy:main"
+
+[project.urls]
+Homepage = "https://github.com/Vligai/secops-helper"
+Repository = "https://github.com/Vligai/secops-helper"
+Documentation = "https://github.com/Vligai/secops-helper/blob/main/README.md"
+"Bug Tracker" = "https://github.com/Vligai/secops-helper/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["secops_helper*"]
+
+[tool.setuptools.package-data]
+secops_helper = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --strict-markers --cov=. --cov-report=html --cov-report=term-missing"
+addopts = "-v --strict-markers"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
 
 [tool.coverage.run]
+source = ["src/secops_helper"]
 omit = [
     "tests/*",
     "*/__pycache__/*",
     "*/site-packages/*",
-    "setup.py",
-    "venv/*",
-    "env/*",
-    ".venv/*"
 ]
 
 [tool.coverage.report]
@@ -53,6 +130,32 @@ exclude_lines = [
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
-    "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+    | \.venv
+    | \.tox
+    | venv
+    | env
+    | __pycache__
+    | build
+    | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+known_first_party = ["secops_helper"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", "env", ".venv", ".tox"]
+skips = ["B101", "B601"]
