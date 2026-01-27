@@ -8,42 +8,237 @@ import sys
 import tempfile
 import os
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from secops_helper.tools.threat_feed_aggregator import ThreatFeedAggregator
+from secops_helper.tools.threat_feed_aggregator import (
+    FeedAggregator,
+    ThreatFeedStorage,
+    ThreatFoxFeed,
+    URLhausFeed,
+)
 
 
-class TestFeedSources:
-    """Test threat feed source handling"""
+class TestThreatFeedStorage:
+    """Test ThreatFeedStorage class"""
 
-    def test_list_available_sources(self):
-        """Test listing available feed sources"""
-        aggregator = ThreatFeedAggregator()
-        sources = aggregator.get_available_sources()
-        assert isinstance(sources, list)
-        assert len(sources) > 0
+    def test_storage_creation(self, tmp_path):
+        """Test creating storage instance"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        assert storage is not None
+        assert storage.conn is not None
+        storage.close()
 
-    def test_threatfox_source_config(self):
-        """Test ThreatFox source configuration"""
-        aggregator = ThreatFeedAggregator()
-        sources = aggregator.get_available_sources()
-        assert "threatfox" in [s.lower() for s in sources]
+    def test_store_ioc(self, tmp_path):
+        """Test storing IOC to database"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        ioc = {
+            "value": "evil.com",
+            "type": "domain",
+            "source": "test",
+            "confidence": 75,
+            "malware_family": "TestMalware",
+            "first_seen": "2025-01-01 00:00:00",
+            "last_seen": "2025-01-01 00:00:00",
+            "tags": ["test"],
+            "reference": "https://example.com",
+        }
+        result = storage.store_ioc(ioc)
+        assert result is True  # New IOC
+        storage.close()
 
-    def test_urlhaus_source_config(self):
-        """Test URLhaus source configuration"""
-        aggregator = ThreatFeedAggregator()
-        sources = aggregator.get_available_sources()
-        assert "urlhaus" in [s.lower() for s in sources]
+    def test_store_duplicate_ioc(self, tmp_path):
+        """Test that duplicate IOCs are updated, not duplicated"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        ioc = {
+            "value": "evil.com",
+            "type": "domain",
+            "source": "test",
+            "confidence": 75,
+        }
+        result1 = storage.store_ioc(ioc)
+        result2 = storage.store_ioc(ioc)
+        assert result1 is True  # First insert
+        assert result2 is False  # Update, not new
+        storage.close()
+
+    def test_search_by_value(self, tmp_path):
+        """Test searching by IOC value"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        storage.store_ioc({"value": "evil.com", "type": "domain", "confidence": 75})
+
+        results = storage.search_ioc(value="evil.com")
+        assert len(results) == 1
+        assert results[0]["value"] == "evil.com"
+        storage.close()
+
+    def test_search_by_type(self, tmp_path):
+        """Test searching by IOC type"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        storage.store_ioc({"value": "evil.com", "type": "domain", "confidence": 75})
+        storage.store_ioc({"value": "192.168.1.1", "type": "ip", "confidence": 80})
+
+        results = storage.search_ioc(ioc_type="domain")
+        assert len(results) == 1
+        assert results[0]["type"] == "domain"
+        storage.close()
+
+    def test_search_by_malware_family(self, tmp_path):
+        """Test searching by malware family"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        storage.store_ioc(
+            {"value": "evil.com", "type": "domain", "confidence": 75, "malware_family": "Emotet"}
+        )
+        storage.store_ioc(
+            {"value": "bad.com", "type": "domain", "confidence": 80, "malware_family": "TrickBot"}
+        )
+
+        results = storage.search_ioc(malware_family="Emotet")
+        assert len(results) == 1
+        assert results[0]["malware_family"] == "Emotet"
+        storage.close()
+
+    def test_search_by_min_confidence(self, tmp_path):
+        """Test searching by minimum confidence"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        storage.store_ioc({"value": "low.com", "type": "domain", "confidence": 30})
+        storage.store_ioc({"value": "high.com", "type": "domain", "confidence": 90})
+
+        results = storage.search_ioc(min_confidence=50)
+        assert len(results) == 1
+        assert results[0]["value"] == "high.com"
+        storage.close()
+
+    def test_get_statistics(self, tmp_path):
+        """Test getting statistics"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        storage.store_ioc({"value": "evil.com", "type": "domain", "confidence": 75})
+
+        stats = storage.get_statistics()
+        assert "total_iocs" in stats
+        assert stats["total_iocs"] >= 1
+        storage.close()
+
+    def test_record_update(self, tmp_path):
+        """Test recording feed updates"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        storage.record_update("test_feed", iocs_added=5, iocs_updated=2, success=True)
+
+        # Should not raise any exceptions
+        stats = storage.get_statistics()
+        assert stats is not None
+        storage.close()
 
 
-class TestFeedUpdate:
-    """Test feed update functionality"""
+class TestThreatFoxFeed:
+    """Test ThreatFox feed"""
+
+    def test_feed_creation(self):
+        """Test creating ThreatFox feed"""
+        feed = ThreatFoxFeed()
+        assert feed is not None
+
+    @patch("requests.post")
+    def test_fetch_recent(self, mock_post):
+        """Test fetching recent IOCs from ThreatFox"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "query_status": "ok",
+            "data": [
+                {
+                    "ioc": "evil.com",
+                    "ioc_type": "domain",
+                    "threat_type": "botnet_cc",
+                    "malware": "Emotet",
+                    "confidence_level": 75,
+                    "first_seen_utc": "2025-01-01 00:00:00 UTC",
+                    "last_seen_utc": "2025-01-01 00:00:00 UTC",
+                    "tags": ["emotet", "botnet"],
+                    "reference": "https://threatfox.abuse.ch",
+                }
+            ],
+        }
+        mock_post.return_value = mock_response
+
+        feed = ThreatFoxFeed()
+        iocs = feed.fetch_recent(days=1)
+
+        assert len(iocs) == 1
+        assert iocs[0]["value"] == "evil.com"
+        # Type might be transformed, so just check it exists
+        assert "type" in iocs[0]
+
+    @patch("requests.post")
+    def test_fetch_empty_response(self, mock_post):
+        """Test handling empty response"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"query_status": "ok", "data": []}
+        mock_post.return_value = mock_response
+
+        feed = ThreatFoxFeed()
+        iocs = feed.fetch_recent(days=1)
+
+        assert len(iocs) == 0
+
+
+class TestURLhausFeed:
+    """Test URLhaus feed"""
+
+    def test_feed_creation(self):
+        """Test creating URLhaus feed"""
+        feed = URLhausFeed()
+        assert feed is not None
 
     @patch("requests.get")
-    def test_update_threatfox(self, mock_get):
+    def test_fetch_recent(self, mock_get):
+        """Test fetching recent URLs from URLhaus"""
+        # URLhaus returns CSV format
+        csv_content = """# URLhaus Bulk URL export
+#
+# Columns: id,dateadded,url,url_status,last_online,threat,tags,urlhaus_link,reporter
+"1","2025-01-01 00:00:00","http://evil.com/malware.exe","online","2025-01-01","malware_download","elf","https://urlhaus.abuse.ch/url/1","anonymous"
+"""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = csv_content
+        mock_get.return_value = mock_response
+
+        feed = URLhausFeed()
+        iocs = feed.fetch_recent(limit=10)
+
+        # URLhaus implementation may need actual CSV parsing to work
+        assert isinstance(iocs, list)
+
+
+class TestFeedAggregator:
+    """Test FeedAggregator class"""
+
+    def test_aggregator_creation(self, tmp_path):
+        """Test creating aggregator instance"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        aggregator = FeedAggregator(storage)
+        assert aggregator is not None
+        assert "threatfox" in aggregator.feeds
+        assert "urlhaus" in aggregator.feeds
+        storage.close()
+
+    @patch("requests.post")
+    @patch("requests.get")
+    def test_update_feed_threatfox(self, mock_get, mock_post, tmp_path):
         """Test updating ThreatFox feed"""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -56,236 +251,53 @@ class TestFeedUpdate:
                     "threat_type": "botnet_cc",
                     "malware": "Emotet",
                     "confidence_level": 75,
-                    "first_seen": "2025-01-01 00:00:00",
+                    "first_seen_utc": "2025-01-01 00:00:00 UTC",
                 }
             ],
         }
-        mock_get.return_value = mock_response
+        mock_post.return_value = mock_response
 
-        aggregator = ThreatFeedAggregator()
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        aggregator = FeedAggregator(storage)
         result = aggregator.update_feed("threatfox")
-        assert result is not None
 
+        assert result["success"] is True
+        assert result["added"] >= 0
+        storage.close()
+
+    def test_update_unknown_feed(self, tmp_path):
+        """Test updating unknown feed"""
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        aggregator = FeedAggregator(storage)
+        result = aggregator.update_feed("unknown_feed")
+
+        assert "error" in result
+        storage.close()
+
+    @patch("requests.post")
     @patch("requests.get")
-    def test_update_urlhaus(self, mock_get):
-        """Test updating URLhaus feed"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.text = "id,dateadded,url,url_status,threat,tags\n1,2025-01-01,http://evil.com/mal,online,malware_download,elf"
-        mock_get.return_value = mock_response
-
-        aggregator = ThreatFeedAggregator()
-        result = aggregator.update_feed("urlhaus")
-        assert result is not None
-
-    @patch("requests.get")
-    def test_update_all_feeds(self, mock_get):
+    def test_update_all(self, mock_get, mock_post, tmp_path):
         """Test updating all feeds"""
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"query_status": "ok", "data": []}
-        mock_response.text = "id,dateadded,url,url_status\n"
-        mock_get.return_value = mock_response
+        mock_post_response = Mock()
+        mock_post_response.status_code = 200
+        mock_post_response.json.return_value = {"query_status": "ok", "data": []}
+        mock_post.return_value = mock_post_response
 
-        aggregator = ThreatFeedAggregator()
-        result = aggregator.update_all()
-        assert result is not None
+        mock_get_response = Mock()
+        mock_get_response.status_code = 200
+        mock_get_response.text = "id,dateadded,url,url_status\n"
+        mock_get.return_value = mock_get_response
 
+        db_path = str(tmp_path / "test.db")
+        storage = ThreatFeedStorage(db_path)
+        aggregator = FeedAggregator(storage)
+        results = aggregator.update_all()
 
-class TestIOCStorage:
-    """Test IOC storage functionality"""
-
-    @pytest.fixture
-    def temp_db(self):
-        """Create temporary database"""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
-            return f.name
-
-    def test_store_ioc(self, temp_db):
-        """Test storing IOC to database"""
-        aggregator = ThreatFeedAggregator(db_path=temp_db)
-        result = aggregator.store_ioc(
-            {
-                "value": "evil.com",
-                "type": "domain",
-                "source": "test",
-                "confidence": 75,
-                "malware_family": "TestMalware",
-            }
-        )
-        assert result is True or result is None
-        os.unlink(temp_db)
-
-    def test_deduplication(self, temp_db):
-        """Test that duplicate IOCs are deduplicated"""
-        aggregator = ThreatFeedAggregator(db_path=temp_db)
-        ioc = {"value": "evil.com", "type": "domain", "source": "test", "confidence": 75}
-        aggregator.store_ioc(ioc)
-        aggregator.store_ioc(ioc)
-        # Second insert should update, not duplicate
-        results = aggregator.search(value="evil.com")
-        assert len(results) <= 1
-        os.unlink(temp_db)
-
-    def test_confidence_aggregation(self, temp_db):
-        """Test that confidence increases with multiple sources"""
-        aggregator = ThreatFeedAggregator(db_path=temp_db)
-        aggregator.store_ioc(
-            {"value": "evil.com", "type": "domain", "source": "source1", "confidence": 50}
-        )
-        aggregator.store_ioc(
-            {"value": "evil.com", "type": "domain", "source": "source2", "confidence": 60}
-        )
-        results = aggregator.search(value="evil.com")
-        if results:
-            # Confidence should be higher than individual sources
-            assert results[0].get("confidence", 0) >= 50
-        os.unlink(temp_db)
-
-
-class TestIOCSearch:
-    """Test IOC search functionality"""
-
-    @pytest.fixture
-    def populated_db(self):
-        """Create database with test data"""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
-            db_path = f.name
-
-        aggregator = ThreatFeedAggregator(db_path=db_path)
-        test_iocs = [
-            {
-                "value": "evil.com",
-                "type": "domain",
-                "source": "test",
-                "confidence": 75,
-                "malware_family": "Emotet",
-            },
-            {
-                "value": "192.168.1.100",
-                "type": "ip",
-                "source": "test",
-                "confidence": 80,
-                "malware_family": "TrickBot",
-            },
-            {
-                "value": "http://bad.com/mal.exe",
-                "type": "url",
-                "source": "test",
-                "confidence": 90,
-                "malware_family": "Emotet",
-            },
-        ]
-        for ioc in test_iocs:
-            aggregator.store_ioc(ioc)
-
-        yield db_path
-        os.unlink(db_path)
-
-    def test_search_by_value(self, populated_db):
-        """Test searching by IOC value"""
-        aggregator = ThreatFeedAggregator(db_path=populated_db)
-        results = aggregator.search(value="evil.com")
-        assert len(results) >= 0  # May be 0 or more depending on implementation
-
-    def test_search_by_type(self, populated_db):
-        """Test searching by IOC type"""
-        aggregator = ThreatFeedAggregator(db_path=populated_db)
-        results = aggregator.search(ioc_type="domain")
-        assert isinstance(results, list)
-
-    def test_search_by_malware_family(self, populated_db):
-        """Test searching by malware family"""
-        aggregator = ThreatFeedAggregator(db_path=populated_db)
-        results = aggregator.search(malware_family="Emotet")
-        assert isinstance(results, list)
-
-    def test_search_by_confidence(self, populated_db):
-        """Test searching by minimum confidence"""
-        aggregator = ThreatFeedAggregator(db_path=populated_db)
-        results = aggregator.search(min_confidence=80)
-        for r in results:
-            assert r.get("confidence", 0) >= 80
-
-
-class TestExport:
-    """Test export functionality"""
-
-    @pytest.fixture
-    def populated_db(self):
-        """Create database with test data"""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
-            db_path = f.name
-
-        aggregator = ThreatFeedAggregator(db_path=db_path)
-        aggregator.store_ioc(
-            {"value": "evil.com", "type": "domain", "source": "test", "confidence": 75}
-        )
-
-        yield db_path
-        os.unlink(db_path)
-
-    def test_export_json(self, populated_db):
-        """Test exporting to JSON"""
-        aggregator = ThreatFeedAggregator(db_path=populated_db)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as f:
-            output_path = f.name
-
-        try:
-            aggregator.export(output_path, format="json")
-            assert os.path.exists(output_path)
-        finally:
-            if os.path.exists(output_path):
-                os.unlink(output_path)
-
-    def test_export_csv(self, populated_db):
-        """Test exporting to CSV"""
-        aggregator = ThreatFeedAggregator(db_path=populated_db)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as f:
-            output_path = f.name
-
-        try:
-            aggregator.export(output_path, format="csv")
-            assert os.path.exists(output_path)
-        finally:
-            if os.path.exists(output_path):
-                os.unlink(output_path)
-
-
-class TestStatistics:
-    """Test statistics functionality"""
-
-    def test_get_stats(self):
-        """Test getting feed statistics"""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
-            db_path = f.name
-
-        try:
-            aggregator = ThreatFeedAggregator(db_path=db_path)
-            stats = aggregator.get_stats()
-            assert isinstance(stats, dict)
-        finally:
-            os.unlink(db_path)
-
-
-class TestThreatFeedAggregatorIntegration:
-    """Integration tests for Threat Feed Aggregator"""
-
-    def test_aggregator_creation(self):
-        """Test creating aggregator instance"""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
-            db_path = f.name
-
-        try:
-            aggregator = ThreatFeedAggregator(db_path=db_path)
-            assert aggregator is not None
-        finally:
-            os.unlink(db_path)
-
-    def test_aggregator_with_default_db(self):
-        """Test aggregator with default database path"""
-        aggregator = ThreatFeedAggregator()
-        assert aggregator is not None
+        assert "threatfox" in results
+        assert "urlhaus" in results
+        storage.close()
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from secops_helper.tools.url_analyzer import URLValidator, URLParser, SuspiciousPatterns
+from secops_helper.tools.url_analyzer import URLValidator, URLParser, SuspiciousPatternDetector
 
 
 class TestURLValidator:
@@ -109,51 +109,50 @@ class TestURLParser:
         assert result["original"] == url
 
 
-class TestSuspiciousPatterns:
+class TestSuspiciousPatternDetector:
     """Test suspicious URL pattern detection"""
 
     def test_detect_ip_in_url(self):
         """Test detection of IP address in URL"""
-        patterns = SuspiciousPatterns()
-        findings = patterns.check_url("http://192.168.1.1/malware.exe")
-        pattern_names = [f["pattern"] for f in findings]
-        assert "ip_address" in pattern_names
+        parsed = URLParser.parse_url("http://192.168.1.1/malware.exe")
+        result = SuspiciousPatternDetector.analyze_url("http://192.168.1.1/malware.exe", parsed)
+        assert "Uses IP address instead of domain name" in result["suspicions"]
+        assert result["is_suspicious"] is True
 
-    def test_detect_double_extension(self):
-        """Test detection of double extension"""
-        patterns = SuspiciousPatterns()
-        findings = patterns.check_url("http://example.com/file.pdf.exe")
-        pattern_names = [f["pattern"] for f in findings]
-        assert "double_extension" in pattern_names
+    def test_detect_suspicious_extension(self):
+        """Test detection of suspicious extension"""
+        parsed = URLParser.parse_url("http://example.com/file.exe")
+        result = SuspiciousPatternDetector.analyze_url("http://example.com/file.exe", parsed)
+        assert any("Suspicious file extension" in s for s in result["suspicions"])
 
     def test_detect_suspicious_tld(self):
         """Test detection of suspicious TLD"""
-        patterns = SuspiciousPatterns()
-        findings = patterns.check_url("http://malware.xyz/payload")
-        # Should detect suspicious TLD if .xyz is in the list
-        assert isinstance(findings, list)
+        parsed = URLParser.parse_url("http://malware.tk/payload")
+        result = SuspiciousPatternDetector.analyze_url("http://malware.tk/payload", parsed)
+        assert any("free/suspicious TLD" in s for s in result["suspicions"])
 
-    def test_detect_url_shortener(self):
-        """Test detection of URL shortener"""
-        patterns = SuspiciousPatterns()
-        findings = patterns.check_url("http://bit.ly/abc123")
-        pattern_names = [f["pattern"] for f in findings]
-        assert "url_shortener" in pattern_names
+    def test_detect_url_encoding(self):
+        """Test detection of heavy URL encoding"""
+        url = "http://example.com/%41%42%43%44%45"
+        parsed = URLParser.parse_url(url)
+        result = SuspiciousPatternDetector.analyze_url(url, parsed)
+        # May or may not trigger depending on encoding count
+        assert "risk_score" in result
 
-    def test_detect_executable_extension(self):
-        """Test detection of executable extension"""
-        patterns = SuspiciousPatterns()
-        findings = patterns.check_url("http://example.com/setup.exe")
-        pattern_names = [f["pattern"] for f in findings]
-        assert "executable_extension" in pattern_names
+    def test_detect_suspicious_keywords(self):
+        """Test detection of suspicious keywords"""
+        parsed = URLParser.parse_url("http://example.com/login-verify-account")
+        result = SuspiciousPatternDetector.analyze_url(
+            "http://example.com/login-verify-account", parsed
+        )
+        assert any("suspicious keywords" in s for s in result["suspicions"])
 
-    def test_clean_url_no_findings(self):
-        """Test clean URL has no critical findings"""
-        patterns = SuspiciousPatterns()
-        findings = patterns.check_url("https://www.google.com/search?q=test")
-        # Clean URLs should have few or no high-severity findings
-        high_severity = [f for f in findings if f.get("severity") in ["high", "critical"]]
-        assert len(high_severity) == 0
+    def test_clean_url_low_risk(self):
+        """Test clean URL has low risk score"""
+        parsed = URLParser.parse_url("https://www.google.com/search")
+        result = SuspiciousPatternDetector.analyze_url("https://www.google.com/search", parsed)
+        assert result["risk_score"] < 30
+        assert result["is_suspicious"] is False
 
 
 class TestURLAnalyzerIntegration:

@@ -287,6 +287,9 @@ class STIXExporter:
             objects.append(indicator)
             report["object_refs"].append(indicator["id"])
 
+        # Add report object to bundle
+        objects.append(report)
+
         # Create bundle
         bundle = {"type": "bundle", "id": self._generate_stix_id("bundle"), "objects": objects}
 
