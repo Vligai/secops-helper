@@ -12,6 +12,9 @@ from datetime import datetime, timezone, timedelta
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+# Skip all tests if cryptography is not installed
+cryptography = pytest.importorskip("cryptography", reason="cryptography not installed")
+
 
 class TestCertificateRetriever:
     """Test certificate retrieval"""

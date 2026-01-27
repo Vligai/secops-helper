@@ -13,6 +13,9 @@ from datetime import datetime
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+# Skip all tests if eml_parser is not installed
+eml_parser_available = pytest.importorskip("eml_parser", reason="eml_parser not installed")
+
 from secops_helper.tools.eml_parser import (
     parse_eml,
     extract_basic_headers,
