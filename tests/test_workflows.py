@@ -12,9 +12,16 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 # Add src directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from secops_helper.core.workflow import Workflow, WorkflowStep, StepResult, WorkflowContext, WorkflowRegistry, workflow
+from secops_helper.core.workflow import (
+    Workflow,
+    WorkflowStep,
+    StepResult,
+    WorkflowContext,
+    WorkflowRegistry,
+    workflow,
+)
 from secops_helper.core.scorer import Severity
 
 
@@ -27,18 +34,25 @@ class TestWorkflowStep:
         assert step.name == "test_step"
         assert step.description == "Test step description"
         assert step.tool == "test_tool"
-        assert step.required == True
+        assert step.required is True
         assert step.depends_on == []
 
     def test_step_with_dependencies(self):
         """Test step with dependencies"""
-        step = WorkflowStep(name="dependent_step", description="Depends on others", tool="tool", depends_on=["step1", "step2"])
+        step = WorkflowStep(
+            name="dependent_step",
+            description="Depends on others",
+            tool="tool",
+            depends_on=["step1", "step2"],
+        )
         assert step.depends_on == ["step1", "step2"]
 
     def test_optional_step(self):
         """Test optional step"""
-        step = WorkflowStep(name="optional", description="Optional step", tool="tool", required=False)
-        assert step.required == False
+        step = WorkflowStep(
+            name="optional", description="Optional step", tool="tool", required=False
+        )
+        assert step.required is False
 
 
 class TestStepResult:
@@ -47,14 +61,14 @@ class TestStepResult:
     def test_successful_result(self):
         """Test successful step result"""
         result = StepResult(step_name="test", success=True, data={"key": "value"})
-        assert result.success == True
+        assert result.success is True
         assert result.data == {"key": "value"}
         assert result.error is None
 
     def test_failed_result(self):
         """Test failed step result"""
         result = StepResult(step_name="test", success=False, error="Something went wrong")
-        assert result.success == False
+        assert result.success is False
         assert result.error == "Something went wrong"
 
 
@@ -145,7 +159,7 @@ class TestPhishingEmailWorkflow:
 
     def test_workflow_properties(self):
         """Test workflow name and description"""
-        from workflows.phishing_email import PhishingEmailWorkflow
+        from secops_helper.workflows.phishing_email import PhishingEmailWorkflow
 
         wf = PhishingEmailWorkflow(verbose=False)
         assert wf.name == "phishing-email"
@@ -153,14 +167,14 @@ class TestPhishingEmailWorkflow:
 
     def test_workflow_has_steps(self):
         """Test that workflow has defined steps"""
-        from workflows.phishing_email import PhishingEmailWorkflow
+        from secops_helper.workflows.phishing_email import PhishingEmailWorkflow
 
         wf = PhishingEmailWorkflow(verbose=False)
         assert len(wf.steps) > 0
 
     def test_workflow_step_names(self):
         """Test expected step names exist"""
-        from workflows.phishing_email import PhishingEmailWorkflow
+        from secops_helper.workflows.phishing_email import PhishingEmailWorkflow
 
         wf = PhishingEmailWorkflow(verbose=False)
         step_names = [s.name for s in wf.steps]
@@ -171,7 +185,7 @@ class TestPhishingEmailWorkflow:
 
     def test_workflow_with_email_file(self):
         """Test workflow execution with email file"""
-        from workflows.phishing_email import PhishingEmailWorkflow
+        from secops_helper.workflows.phishing_email import PhishingEmailWorkflow
 
         # Create a test email file
         with tempfile.NamedTemporaryFile(suffix=".eml", delete=False) as f:
@@ -198,7 +212,7 @@ class TestMalwareTriageWorkflow:
 
     def test_workflow_properties(self):
         """Test workflow name and description"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         wf = MalwareTriageWorkflow(verbose=False)
         assert wf.name == "malware-triage"
@@ -206,14 +220,14 @@ class TestMalwareTriageWorkflow:
 
     def test_workflow_has_steps(self):
         """Test that workflow has defined steps"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         wf = MalwareTriageWorkflow(verbose=False)
         assert len(wf.steps) > 0
 
     def test_workflow_step_names(self):
         """Test expected step names exist"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         wf = MalwareTriageWorkflow(verbose=False)
         step_names = [s.name for s in wf.steps]
@@ -224,7 +238,7 @@ class TestMalwareTriageWorkflow:
 
     def test_workflow_with_file(self):
         """Test workflow execution with a file"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         # Create a test file
         with tempfile.NamedTemporaryFile(suffix=".exe", delete=False) as f:
@@ -247,14 +261,14 @@ class TestIOCHuntWorkflow:
 
     def test_workflow_properties(self):
         """Test workflow name and description"""
-        from workflows.ioc_hunt import IOCHuntWorkflow
+        from secops_helper.workflows.ioc_hunt import IOCHuntWorkflow
 
         wf = IOCHuntWorkflow(verbose=False)
         assert wf.name == "ioc-hunt"
 
     def test_workflow_with_ioc_file(self):
         """Test workflow execution with IOC list"""
-        from workflows.ioc_hunt import IOCHuntWorkflow
+        from secops_helper.workflows.ioc_hunt import IOCHuntWorkflow
 
         # Create a test IOC file
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False, mode="w") as f:
@@ -280,14 +294,14 @@ class TestNetworkForensicsWorkflow:
 
     def test_workflow_properties(self):
         """Test workflow name and description"""
-        from workflows.network_forensics import NetworkForensicsWorkflow
+        from secops_helper.workflows.network_forensics import NetworkForensicsWorkflow
 
         wf = NetworkForensicsWorkflow(verbose=False)
         assert wf.name == "network-forensics"
 
     def test_workflow_has_steps(self):
         """Test that workflow has defined steps"""
-        from workflows.network_forensics import NetworkForensicsWorkflow
+        from secops_helper.workflows.network_forensics import NetworkForensicsWorkflow
 
         wf = NetworkForensicsWorkflow(verbose=False)
         step_names = [s.name for s in wf.steps]
@@ -302,14 +316,14 @@ class TestLogInvestigationWorkflow:
 
     def test_workflow_properties(self):
         """Test workflow name and description"""
-        from workflows.log_investigation import LogInvestigationWorkflow
+        from secops_helper.workflows.log_investigation import LogInvestigationWorkflow
 
         wf = LogInvestigationWorkflow(verbose=False)
         assert wf.name == "log-investigation"
 
     def test_workflow_has_steps(self):
         """Test that workflow has defined steps"""
-        from workflows.log_investigation import LogInvestigationWorkflow
+        from secops_helper.workflows.log_investigation import LogInvestigationWorkflow
 
         wf = LogInvestigationWorkflow(verbose=False)
         step_names = [s.name for s in wf.steps]
@@ -320,12 +334,16 @@ class TestLogInvestigationWorkflow:
 
     def test_workflow_with_log_file(self):
         """Test workflow execution with log file"""
-        from workflows.log_investigation import LogInvestigationWorkflow
+        from secops_helper.workflows.log_investigation import LogInvestigationWorkflow
 
         # Create a test log file
         with tempfile.NamedTemporaryFile(suffix=".log", delete=False, mode="w") as f:
-            f.write('192.168.1.100 - - [01/Jan/2025:00:00:00 +0000] "GET /admin HTTP/1.1" 200 1234\n')
-            f.write('192.168.1.100 - - [01/Jan/2025:00:00:01 +0000] "GET /login HTTP/1.1" 200 1234\n')
+            f.write(
+                '192.168.1.100 - - [01/Jan/2025:00:00:00 +0000] "GET /admin HTTP/1.1" 200 1234\n'
+            )
+            f.write(
+                '192.168.1.100 - - [01/Jan/2025:00:00:01 +0000] "GET /login HTTP/1.1" 200 1234\n'
+            )
             temp_path = f.name
 
         try:
@@ -342,7 +360,7 @@ class TestWorkflowResultStructure:
 
     def test_result_has_required_fields(self):
         """Test result structure"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as f:
             f.write(b"test content")
@@ -367,7 +385,7 @@ class TestWorkflowResultStructure:
 
     def test_step_results_structure(self):
         """Test step results structure"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as f:
             f.write(b"test content")
@@ -390,7 +408,7 @@ class TestWorkflowDependencies:
 
     def test_steps_with_dependencies_wait(self):
         """Test that dependent steps wait for prerequisites"""
-        from workflows.phishing_email import PhishingEmailWorkflow
+        from secops_helper.workflows.phishing_email import PhishingEmailWorkflow
 
         wf = PhishingEmailWorkflow(verbose=False)
 
@@ -411,7 +429,7 @@ class TestWorkflowVerboseMode:
 
     def test_verbose_execution(self):
         """Test workflow in verbose mode"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as f:
             f.write(b"test")
@@ -431,7 +449,7 @@ class TestWorkflowErrorHandling:
 
     def test_nonexistent_file(self):
         """Test workflow with nonexistent file"""
-        from workflows.malware_triage import MalwareTriageWorkflow
+        from secops_helper.workflows.malware_triage import MalwareTriageWorkflow
 
         wf = MalwareTriageWorkflow(verbose=False)
         result = wf.execute("/nonexistent/path/file.exe", "file")
@@ -440,4 +458,4 @@ class TestWorkflowErrorHandling:
         assert result is not None
         # First step should have failed
         first_step = result["step_results"][0]
-        assert first_step["success"] == False
+        assert first_step["success"] is False
