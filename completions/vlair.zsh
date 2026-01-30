@@ -1,9 +1,9 @@
-#compdef secops
+#compdef vlair
 
-# Zsh completion for SecOps Helper
-# Add to fpath or source directly: source completions/secops.zsh
+# Zsh completion for vlair
+# Add to fpath or source directly: source completions/vlair.zsh
 
-_secops() {
+_vlair() {
     local -a commands workflows check_types tools
 
     commands=(
@@ -102,4 +102,4 @@ _secops() {
     esac
 }
 
-_secops "$@"
+_vlair "$@"

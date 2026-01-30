@@ -12,7 +12,7 @@ import base64
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from secops_helper.tools.deobfuscator import Deobfuscator, Decoder, EncodingDetector
+from vlair.tools.deobfuscator import Deobfuscator, Decoder, EncodingDetector
 
 
 class TestLanguageDetection:
@@ -198,7 +198,7 @@ class TestIOCExtraction:
 
     def test_extract_urls(self):
         """Test extracting URLs from deobfuscated code"""
-        from secops_helper.tools.deobfuscator import IOCExtractor
+        from vlair.tools.deobfuscator import IOCExtractor
 
         script = 'var url = "http://evil.com/malware.exe";'
         iocs = IOCExtractor.extract_iocs(script)
@@ -208,7 +208,7 @@ class TestIOCExtraction:
 
     def test_extract_ips(self):
         """Test extracting IP addresses"""
-        from secops_helper.tools.deobfuscator import IOCExtractor
+        from vlair.tools.deobfuscator import IOCExtractor
 
         script = 'var ip = "192.168.1.1";'
         iocs = IOCExtractor.extract_iocs(script)

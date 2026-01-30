@@ -1,8 +1,8 @@
 #!/bin/bash
-# Bash completion for SecOps Helper
-# Source this file: source completions/secops.bash
+# Bash completion for vlair
+# Source this file: source completions/vlair.bash
 
-_secops_completions() {
+_vlair_completions() {
     local cur prev commands workflows check_types tools flags
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -65,6 +65,6 @@ _secops_completions() {
     return 0
 }
 
-complete -F _secops_completions secops
-complete -F _secops_completions ./secops
-complete -F _secops_completions python secops.py
+complete -F _vlair_completions vlair
+complete -F _vlair_completions ./vlair
+complete -F _vlair_completions python vlair.py

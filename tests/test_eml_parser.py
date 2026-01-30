@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 # Skip all tests if eml_parser is not installed
 eml_parser_available = pytest.importorskip("eml_parser", reason="eml_parser not installed")
 
-from secops_helper.tools.eml_parser import (
+from vlair.tools.eml_parser import (
     parse_eml,
     extract_basic_headers,
     extract_ips_and_servers,
@@ -221,7 +221,7 @@ class TestExtractAttachments:
 
         assert result == []
 
-    @patch("secops_helper.tools.eml_parser.vt_lookup_sha256")
+    @patch("vlair.tools.eml_parser.vt_lookup_sha256")
     def test_extract_attachments_with_vt(self, mock_vt):
         """Test attachment extraction with VT lookup"""
         mock_vt.return_value = {
@@ -347,7 +347,7 @@ class TestVirusTotalLookup:
         mock_get.return_value = mock_response
 
         # Mock environment variable
-        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
+        with patch("vlair.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("abc123def456")
 
         assert result["VT_Malicious"] == 10
@@ -361,7 +361,7 @@ class TestVirusTotalLookup:
         mock_response.status_code = 404
         mock_get.return_value = mock_response
 
-        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
+        with patch("vlair.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("nonexistent_hash")
 
         assert "VT_Error" in result
@@ -372,7 +372,7 @@ class TestVirusTotalLookup:
         """Test VT lookup with network error"""
         mock_get.side_effect = Exception("Network error")
 
-        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
+        with patch("vlair.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("abc123")
 
         assert "VT_Error" in result
@@ -380,14 +380,14 @@ class TestVirusTotalLookup:
 
     def test_vt_lookup_no_api_key(self):
         """Test VT lookup without API key"""
-        with patch("secops_helper.tools.eml_parser.VT_API_KEY", None):
+        with patch("vlair.tools.eml_parser.VT_API_KEY", None):
             result = vt_lookup_sha256("abc123")
 
         assert result == {}
 
     def test_vt_lookup_invalid_hash(self):
         """Test VT lookup with invalid hash"""
-        with patch("secops_helper.tools.eml_parser.VT_API_KEY", "test_key"):
+        with patch("vlair.tools.eml_parser.VT_API_KEY", "test_key"):
             result = vt_lookup_sha256("N/A")
 
         assert result == {}

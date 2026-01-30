@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-SecOps Helper - Central Control System
+vlair - Central Control System
 A unified security operations toolkit with automatic tool discovery and management.
 
 Usage:
-    secops                      # Interactive mode
-    secops analyze <input>      # Smart analyze (auto-detect input type)
-    secops check <type> <value> # Quick indicator lookup
-    secops workflow <name> <in> # Run pre-built investigation workflow
-    secops investigate          # Interactive guided investigation
-    secops status               # Show system status dashboard
-    secops list                 # List all available tools
-    secops <tool> [args]        # Run a specific tool
-    secops info <tool>          # Get detailed info about a tool
-    secops search <keyword>     # Search for tools by keyword
+    vlair                      # Interactive mode
+    vlair analyze <input>      # Smart analyze (auto-detect input type)
+    vlair check <type> <value> # Quick indicator lookup
+    vlair workflow <name> <in> # Run pre-built investigation workflow
+    vlair investigate          # Interactive guided investigation
+    vlair status               # Show system status dashboard
+    vlair list                 # List all available tools
+    vlair <tool> [args]        # Run a specific tool
+    vlair info <tool>          # Get detailed info about a tool
+    vlair search <keyword>     # Search for tools by keyword
 """
 
 import sys
@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import argparse
 
-from secops_helper.tools import get_tool_registry
+from vlair.tools import get_tool_registry
 
 
 class ToolDiscovery:
@@ -42,12 +42,12 @@ class ToolDiscovery:
         tool_definitions = get_tool_registry()
 
         # Verify and register tools - get the package root
-        package_root = Path(__file__).parent.parent  # src/secops_helper
+        package_root = Path(__file__).parent.parent  # src/vlair
         for tool_id, metadata in tool_definitions.items():
-            # Convert module name to path: secops_helper.tools.eml_parser -> tools/eml_parser.py
+            # Convert module name to path: vlair.tools.eml_parser -> tools/eml_parser.py
             module_parts = metadata["module"].split(".")
             if len(module_parts) >= 3:
-                # Expected format: secops_helper.tools.tool_name
+                # Expected format: vlair.tools.tool_name
                 relative_path = "/".join(module_parts[1:]) + ".py"
                 module_path = package_root / relative_path
             else:
@@ -102,7 +102,7 @@ class ToolManager:
 
         if not tool:
             print(f"Error: Unknown tool '{tool_id}'", file=sys.stderr)
-            print(f"Run 'secops list' to see available tools", file=sys.stderr)
+            print(f"Run 'vlair list' to see available tools", file=sys.stderr)
             sys.exit(1)
 
         if not tool["available"]:
@@ -151,7 +151,7 @@ class InteractiveMenu:
     def show_main_menu(self):
         """Display the main menu"""
         print("\n" + "=" * 70)
-        print("  SecOps Helper - Security Operations Toolkit")
+        print("  vlair - Security Operations Toolkit")
         print("=" * 70)
         print("\nWhat would you like to do?\n")
         print("  1. Browse tools by category")
@@ -369,33 +369,33 @@ class InteractiveMenu:
 1. Basic Usage:
 
    Interactive Mode:
-     $ secops
+     $ vlair
 
    Direct Command:
-     $ secops <tool> [arguments]
+     $ vlair <tool> [arguments]
 
    List All Tools:
-     $ secops list
+     $ vlair list
 
    Get Tool Info:
-     $ secops info <tool>
+     $ vlair info <tool>
 
 2. Common Workflows:
 
    Analyze Suspicious Email:
-     $ secops eml suspicious.eml --vt --output report.json
+     $ vlair eml suspicious.eml --vt --output report.json
 
    Extract IOCs from Threat Report:
-     $ secops ioc report.txt --format csv --output iocs.csv
+     $ vlair ioc report.txt --format csv --output iocs.csv
 
    Check Hash Reputation:
-     $ secops hash <md5/sha1/sha256>
+     $ vlair hash <md5/sha1/sha256>
 
    Analyze Domain/IP:
-     $ secops intel malicious.com
+     $ vlair intel malicious.com
 
    Scan for Malware:
-     $ secops yara scan /path/to/files --rules ./yaraScanner/rules/
+     $ vlair yara scan /path/to/files --rules ./yaraScanner/rules/
 
 3. Configuration:
 
@@ -406,10 +406,10 @@ class InteractiveMenu:
 4. Get Help:
 
    General Help:
-     $ secops --help
+     $ vlair --help
 
    Tool-Specific Help:
-     $ secops <tool> --help
+     $ vlair <tool> --help
 
 5. Advanced Features:
 
@@ -428,39 +428,39 @@ def print_usage():
     """Print usage information"""
     print(
         """
-SecOps Helper - Security Operations Toolkit
+vlair - Security Operations Toolkit
 
 Quick Start:
-    secops analyze <input>      Auto-detect and analyze (RECOMMENDED)
+    vlair analyze <input>      Auto-detect and analyze (RECOMMENDED)
 
 The 'analyze' command automatically detects what you're analyzing and runs
 the appropriate tools. Just give it a file, hash, IP, domain, or URL.
 
 Usage:
-    secops analyze <input>      Smart analysis (auto-detect input type)
-    secops workflow <name> <input>  Run pre-built investigation workflow
-    secops investigate          Guided interactive investigation mode
-    secops status               Show API key and tool status
-    secops                      Tool browser (interactive menu)
-    secops list                 List all available tools
-    secops info <tool>          Show detailed tool information
-    secops search <keyword>     Search for tools
-    secops <tool> [args]        Run a specific tool directly
-    secops --help               Show this help message
-    secops --version            Show version information
+    vlair analyze <input>      Smart analysis (auto-detect input type)
+    vlair workflow <name> <input>  Run pre-built investigation workflow
+    vlair investigate          Guided interactive investigation mode
+    vlair status               Show API key and tool status
+    vlair                     Tool browser (interactive menu)
+    vlair list                 List all available tools
+    vlair info <tool>          Show detailed tool information
+    vlair search <keyword>     Search for tools
+    vlair <tool> [args]        Run a specific tool directly
+    vlair --help               Show this help message
+    vlair --version            Show version information
 
 Examples - Smart Analyze:
-    secops analyze suspicious.eml           # Analyze email file
-    secops analyze 44d88612fea8a8f36...     # Check hash reputation
-    secops analyze malicious.com            # Get domain intelligence
-    secops analyze capture.pcap             # Analyze network traffic
+    vlair analyze suspicious.eml           # Analyze email file
+    vlair analyze 44d88612fea8a8f36...     # Check hash reputation
+    vlair analyze malicious.com            # Get domain intelligence
+    vlair analyze capture.pcap             # Analyze network traffic
 
 Examples - Workflows:
-    secops workflow phishing-email suspicious.eml   # Full phishing investigation
-    secops workflow malware-triage sample.exe       # Malware analysis
-    secops workflow ioc-hunt indicators.txt         # Bulk IOC hunting
-    secops workflow network-forensics capture.pcap  # PCAP forensics
-    secops workflow log-investigation access.log    # Log analysis
+    vlair workflow phishing-email suspicious.eml   # Full phishing investigation
+    vlair workflow malware-triage sample.exe       # Malware analysis
+    vlair workflow ioc-hunt indicators.txt         # Bulk IOC hunting
+    vlair workflow network-forensics capture.pcap  # PCAP forensics
+    vlair workflow log-investigation access.log    # Log analysis
 
 Output Options:
     --json      Machine-readable JSON output
@@ -512,7 +512,7 @@ def main():
         sys.exit(0)
 
     elif sys.argv[1] in ["--version", "-v"]:
-        print("SecOps Helper v4.0.0")
+        print("vlair v4.0.0")
         print("Phase 5: Operationalization - Smart analyze command")
         sys.exit(0)
 
@@ -531,12 +531,12 @@ def main():
             status = "✓" if tool["available"] else "✗"
             print(f"  [{status}] {tool_id:12s} - {tool['name']}")
 
-        print("\nUse 'secops info <tool>' for detailed information")
-        print("Use 'secops <tool> --help' for usage help\n")
+        print("\nUse 'vlair info <tool>' for detailed information")
+        print("Use 'vlair <tool> --help' for usage help\n")
 
     elif sys.argv[1] == "info":
         if len(sys.argv) < 3:
-            print("Usage: secops info <tool>", file=sys.stderr)
+            print("Usage: vlair info <tool>", file=sys.stderr)
             sys.exit(1)
 
         tool_id = sys.argv[2]
@@ -544,14 +544,14 @@ def main():
 
         if not tool:
             print(f"Error: Unknown tool '{tool_id}'", file=sys.stderr)
-            print("Run 'secops list' to see available tools", file=sys.stderr)
+            print("Run 'vlair list' to see available tools", file=sys.stderr)
             sys.exit(1)
 
         menu.show_tool_info(tool_id)
 
     elif sys.argv[1] == "search":
         if len(sys.argv) < 3:
-            print("Usage: secops search <keyword>", file=sys.stderr)
+            print("Usage: vlair search <keyword>", file=sys.stderr)
             sys.exit(1)
 
         keyword = sys.argv[2]
@@ -570,12 +570,12 @@ def main():
     elif sys.argv[1] == "analyze":
         # Smart analyze command - auto-detect and run appropriate tools
         if len(sys.argv) < 3:
-            print("Usage: secops analyze <input> [--verbose] [--json] [--quiet]", file=sys.stderr)
+            print("Usage: vlair analyze <input> [--verbose] [--json] [--quiet]", file=sys.stderr)
             print("\nExamples:", file=sys.stderr)
-            print("  secops analyze suspicious.eml     # Auto-detect email", file=sys.stderr)
-            print("  secops analyze 44d88612...        # Auto-detect hash", file=sys.stderr)
-            print("  secops analyze malicious.com      # Auto-detect domain", file=sys.stderr)
-            print("  secops analyze 192.168.1.1        # Auto-detect IP", file=sys.stderr)
+            print("  vlair analyze suspicious.eml     # Auto-detect email", file=sys.stderr)
+            print("  vlair analyze 44d88612...        # Auto-detect hash", file=sys.stderr)
+            print("  vlair analyze malicious.com      # Auto-detect domain", file=sys.stderr)
+            print("  vlair analyze 192.168.1.1        # Auto-detect IP", file=sys.stderr)
             sys.exit(1)
 
         try:
@@ -583,8 +583,8 @@ def main():
 
             _analyze_start = _time.time()
 
-            from secops_helper.core.analyzer import Analyzer
-            from secops_helper.core.reporter import Reporter
+            from vlair.core.analyzer import Analyzer
+            from vlair.core.reporter import Reporter
 
             # Parse analyze arguments
             input_value = sys.argv[2]
@@ -648,7 +648,7 @@ def main():
 
             # Generate report if requested
             if report_format:
-                from secops_helper.core.report_generator import ReportGenerator
+                from vlair.core.report_generator import ReportGenerator
 
                 generator = ReportGenerator()
                 report_path = generator.generate(result, report_format, output_path)
@@ -656,7 +656,7 @@ def main():
 
             # Record in history
             try:
-                from secops_helper.core.history import AnalysisHistory
+                from vlair.core.history import AnalysisHistory
 
                 history = AnalysisHistory()
                 scorer = result["scorer"]
@@ -684,19 +684,19 @@ def main():
     elif sys.argv[1] == "check":
         # Quick indicator lookup - direct tool invocation without full analysis pipeline
         if len(sys.argv) < 3:
-            print("Usage: secops check <type> <value> [--json] [--verbose]", file=sys.stderr)
-            print("       secops check <file>          # Auto-detect IOC file", file=sys.stderr)
+            print("Usage: vlair check <type> <value> [--json] [--verbose]", file=sys.stderr)
+            print("       vlair check <file>          # Auto-detect IOC file", file=sys.stderr)
             print("\nTypes:", file=sys.stderr)
             print("  hash    <hash>     Look up a file hash (MD5/SHA1/SHA256)", file=sys.stderr)
             print("  domain  <domain>   Get domain intelligence", file=sys.stderr)
             print("  ip      <ip>       Get IP intelligence", file=sys.stderr)
             print("  url     <url>      Check URL reputation", file=sys.stderr)
             print("\nExamples:", file=sys.stderr)
-            print("  secops check hash 44d88612fea8a8f36de82e1278abb02f", file=sys.stderr)
-            print("  secops check domain malicious.com", file=sys.stderr)
-            print("  secops check ip 1.2.3.4 --json", file=sys.stderr)
-            print("  secops check url http://bad.com/payload", file=sys.stderr)
-            print("  secops check iocs.txt", file=sys.stderr)
+            print("  vlair check hash 44d88612fea8a8f36de82e1278abb02f", file=sys.stderr)
+            print("  vlair check domain malicious.com", file=sys.stderr)
+            print("  vlair check ip 1.2.3.4 --json", file=sys.stderr)
+            print("  vlair check url http://bad.com/payload", file=sys.stderr)
+            print("  vlair check iocs.txt", file=sys.stderr)
             sys.exit(1)
 
         check_type = sys.argv[2]
@@ -712,10 +712,10 @@ def main():
             if check_type == "hash":
                 if len(sys.argv) < 4:
                     print("Error: Missing hash value", file=sys.stderr)
-                    print("Usage: secops check hash <md5|sha1|sha256>", file=sys.stderr)
+                    print("Usage: vlair check hash <md5|sha1|sha256>", file=sys.stderr)
                     sys.exit(1)
                 hash_value = sys.argv[3]
-                from secops_helper.tools.hash_lookup import HashLookup
+                from vlair.tools.hash_lookup import HashLookup
 
                 lookup = HashLookup(verbose=verbose)
                 result = lookup.lookup(hash_value)
@@ -743,10 +743,10 @@ def main():
             elif check_type == "domain":
                 if len(sys.argv) < 4:
                     print("Error: Missing domain value", file=sys.stderr)
-                    print("Usage: secops check domain <domain>", file=sys.stderr)
+                    print("Usage: vlair check domain <domain>", file=sys.stderr)
                     sys.exit(1)
                 domain_value = sys.argv[3]
-                from secops_helper.tools.domain_ip_intel import (
+                from vlair.tools.domain_ip_intel import (
                     DomainIPIntelligence as DomainIPIntel,
                 )
 
@@ -772,10 +772,10 @@ def main():
             elif check_type == "ip":
                 if len(sys.argv) < 4:
                     print("Error: Missing IP address", file=sys.stderr)
-                    print("Usage: secops check ip <ip_address>", file=sys.stderr)
+                    print("Usage: vlair check ip <ip_address>", file=sys.stderr)
                     sys.exit(1)
                 ip_value = sys.argv[3]
-                from secops_helper.tools.domain_ip_intel import (
+                from vlair.tools.domain_ip_intel import (
                     DomainIPIntelligence as DomainIPIntel,
                 )
 
@@ -801,10 +801,10 @@ def main():
             elif check_type == "url":
                 if len(sys.argv) < 4:
                     print("Error: Missing URL", file=sys.stderr)
-                    print("Usage: secops check url <url>", file=sys.stderr)
+                    print("Usage: vlair check url <url>", file=sys.stderr)
                     sys.exit(1)
                 url_value = sys.argv[3]
-                from secops_helper.tools.url_analyzer import URLAnalyzer
+                from vlair.tools.url_analyzer import URLAnalyzer
 
                 analyzer = URLAnalyzer(verbose=verbose)
                 result = analyzer.analyze(url_value)
@@ -825,8 +825,8 @@ def main():
 
             elif os.path.isfile(check_type):
                 # Auto-detect file as IOC list
-                from secops_helper.core.analyzer import Analyzer
-                from secops_helper.core.reporter import Reporter
+                from vlair.core.analyzer import Analyzer
+                from vlair.core.reporter import Reporter
 
                 analyzer_instance = Analyzer(verbose=verbose)
                 result = analyzer_instance.analyze(check_type)
@@ -864,7 +864,7 @@ def main():
             # Record in history
             duration = _time.time() - start_time
             try:
-                from secops_helper.core.history import AnalysisHistory
+                from vlair.core.history import AnalysisHistory
 
                 history = AnalysisHistory()
                 verdict_val = (
@@ -896,7 +896,7 @@ def main():
     elif sys.argv[1] == "workflow":
         # Pre-built investigation workflows
         if len(sys.argv) < 3:
-            print("Usage: secops workflow <name> <input> [--verbose] [--json]", file=sys.stderr)
+            print("Usage: vlair workflow <name> <input> [--verbose] [--json]", file=sys.stderr)
             print("\nAvailable workflows:", file=sys.stderr)
             print(
                 "  phishing-email     Comprehensive phishing email investigation", file=sys.stderr
@@ -906,16 +906,16 @@ def main():
             print("  network-forensics  Network traffic forensic analysis", file=sys.stderr)
             print("  log-investigation  Security log investigation", file=sys.stderr)
             print("\nExamples:", file=sys.stderr)
-            print("  secops workflow phishing-email suspicious.eml", file=sys.stderr)
-            print("  secops workflow malware-triage sample.exe --verbose", file=sys.stderr)
-            print("  secops workflow ioc-hunt iocs.txt --json", file=sys.stderr)
+            print("  vlair workflow phishing-email suspicious.eml", file=sys.stderr)
+            print("  vlair workflow malware-triage sample.exe --verbose", file=sys.stderr)
+            print("  vlair workflow ioc-hunt iocs.txt --json", file=sys.stderr)
             sys.exit(1)
 
         workflow_name = sys.argv[2]
 
         if len(sys.argv) < 4:
             print(f"Error: Missing input for workflow '{workflow_name}'", file=sys.stderr)
-            print(f"Usage: secops workflow {workflow_name} <input>", file=sys.stderr)
+            print(f"Usage: vlair workflow {workflow_name} <input>", file=sys.stderr)
             sys.exit(1)
 
         input_value = sys.argv[3]
@@ -937,8 +937,8 @@ def main():
                     output_path = args_list[i + 1]
 
         try:
-            from secops_helper.core.workflow import WorkflowRegistry
-            from secops_helper.core.reporter import Reporter
+            from vlair.core.workflow import WorkflowRegistry
+            from vlair.core.reporter import Reporter
 
             # Import workflows to register them
             from workflows import (
@@ -953,7 +953,7 @@ def main():
             workflow_class = WorkflowRegistry.get(workflow_name)
             if not workflow_class:
                 print(f"Error: Unknown workflow '{workflow_name}'", file=sys.stderr)
-                print("Run 'secops workflow' to see available workflows", file=sys.stderr)
+                print("Run 'vlair workflow' to see available workflows", file=sys.stderr)
                 sys.exit(1)
 
             # Execute workflow
@@ -962,7 +962,7 @@ def main():
 
             # Generate report before potentially modifying result for JSON output
             if report_format:
-                from secops_helper.core.report_generator import ReportGenerator
+                from vlair.core.report_generator import ReportGenerator
 
                 generator = ReportGenerator()
                 report_path = generator.generate(result, report_format, output_path)
@@ -1011,7 +1011,7 @@ def main():
     elif sys.argv[1] == "investigate":
         # Interactive investigation mode
         try:
-            from secops_helper.core.interactive import InteractiveInvestigation
+            from vlair.core.interactive import InteractiveInvestigation
 
             investigation = InteractiveInvestigation()
             investigation.run()
@@ -1026,7 +1026,7 @@ def main():
 
     elif sys.argv[1] == "status":
         # Quick status dashboard
-        print("\nSecOps Helper Status Dashboard")
+        print("\nvlair Status Dashboard")
         print("=" * 50)
 
         # Check API keys
@@ -1103,14 +1103,14 @@ def main():
                 print(f"  IOCs in database: {ioc_count}")
                 print(f"  Last updated: {last_update or 'Never'}")
             else:
-                print("  Database not initialized (run: secops feeds update)")
+                print("  Database not initialized (run: vlair feeds update)")
         except Exception:
             print("  Not available")
 
         # Recent analysis history
         print("\nRecent Analyses:")
         try:
-            from secops_helper.core.history import AnalysisHistory
+            from vlair.core.history import AnalysisHistory
 
             history = AnalysisHistory()
             stats = history.get_stats()
@@ -1143,8 +1143,8 @@ def main():
 
         # Features summary
         print("\nFeatures:")
-        print("  [+] Smart analyze command (secops analyze)")
-        print("  [+] Quick check command (secops check)")
+        print("  [+] Smart analyze command (vlair analyze)")
+        print("  [+] Quick check command (vlair check)")
         print("  [+] Pre-built workflows (5)")
         print("  [+] Interactive investigation mode")
         print("  [+] Report generation (HTML/Markdown)")

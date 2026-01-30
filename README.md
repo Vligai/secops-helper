@@ -1,19 +1,19 @@
-# SecOps Helper
+# vlair
 
-[![Tests](https://github.com/Vligai/secops-helper/actions/workflows/tests.yml/badge.svg)](https://github.com/Vligai/secops-helper/actions/workflows/tests.yml)
+[![Tests](https://github.com/Vligai/vlair/actions/workflows/tests.yml/badge.svg)](https://github.com/Vligai/vlair/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A unified security operations toolkit for threat analysis, incident response, and security investigations.
 
-SecOps Helper brings 12 specialized security tools under a single `secops` command with smart auto-detection, pre-built investigation workflows, and actionable output.
+vlair brings 12 specialized security tools under a single `vlair` command with smart auto-detection, pre-built investigation workflows, and actionable output.
 
 ## Installation
 
 ```bash
-git clone https://github.com/Vligai/secops-helper.git
-cd secops-helper
+git clone https://github.com/Vligai/vlair.git
+cd vlair
 pip install -e .
 ```
 
@@ -38,14 +38,14 @@ cp .env.example .env
 The primary command. Automatically identifies what you're analyzing and runs the appropriate tools.
 
 ```bash
-secops analyze suspicious.eml                           # Email
-secops analyze 44d88612fea8a8f36de82e1278abb02f         # Hash
-secops analyze malicious.com                            # Domain
-secops analyze 192.168.1.1                              # IP
-secops analyze http://evil.com/payload                  # URL
-secops analyze capture.pcap                             # Network capture
-secops analyze access.log                               # Log file
-secops analyze malware.js                               # Script
+vlairanalyze suspicious.eml                           # Email
+vlairanalyze 44d88612fea8a8f36de82e1278abb02f         # Hash
+vlairanalyze malicious.com                            # Domain
+vlairanalyze 192.168.1.1                              # IP
+vlairanalyze http://evil.com/payload                  # URL
+vlairanalyze capture.pcap                             # Network capture
+vlairanalyze access.log                               # Log file
+vlairanalyze malware.js                               # Script
 ```
 
 Output includes a risk score (0-100), verdict (Clean/Suspicious/Malicious), key findings, and recommended actions.
@@ -60,11 +60,11 @@ Flags:
 Pre-built investigation patterns that chain multiple tools together.
 
 ```bash
-secops workflow phishing-email suspicious.eml      # 7-step phishing investigation
-secops workflow malware-triage sample.exe           # 7-step malware analysis
-secops workflow ioc-hunt iocs.txt                  # 6-step bulk IOC hunting
-secops workflow network-forensics capture.pcap     # 7-step PCAP forensics
-secops workflow log-investigation access.log       # 7-step log analysis
+vlairworkflow phishing-email suspicious.eml      # 7-step phishing investigation
+vlairworkflow malware-triage sample.exe           # 7-step malware analysis
+vlairworkflow ioc-hunt iocs.txt                  # 6-step bulk IOC hunting
+vlairworkflow network-forensics capture.pcap     # 7-step PCAP forensics
+vlairworkflow log-investigation access.log       # 7-step log analysis
 ```
 
 ### Investigate (guided mode)
@@ -72,7 +72,7 @@ secops workflow log-investigation access.log       # 7-step log analysis
 Interactive Q&A that walks you through an investigation when you're unsure which tool to use.
 
 ```bash
-secops investigate
+vlairinvestigate
 ```
 
 ### Direct tool access
@@ -80,27 +80,27 @@ secops investigate
 Run any individual tool through the unified interface.
 
 ```bash
-secops eml suspicious.eml --vt
-secops ioc report.txt --format csv
-secops hash 44d88612fea8a8f36de82e1278abb02f
-secops intel malicious.com
-secops log access.log
-secops pcap capture.pcap
-secops url "http://suspicious.com"
-secops yara scan /samples/ --rules ./rules/
-secops cert https://example.com
-secops deobfuscate malware.js --extract-iocs
-secops feeds update
-secops carve --image disk.dd --output /carved/
+vlaireml suspicious.eml --vt
+vlairioc report.txt --format csv
+vlairhash 44d88612fea8a8f36de82e1278abb02f
+vlairintel malicious.com
+vlairlog access.log
+vlairpcap capture.pcap
+vlairurl "http://suspicious.com"
+vlairyara scan /samples/ --rules ./rules/
+vlaircert https://example.com
+vlairdeobfuscate malware.js --extract-iocs
+vlairfeeds update
+vlaircarve --image disk.dd --output /carved/
 ```
 
 ### Other commands
 
 ```bash
-secops list                  # List all tools with status
-secops info <tool>           # Detailed tool documentation
-secops search <keyword>      # Find tools by keyword
-secops status                # API keys, cache stats, recent history
+vlairlist                  # List all tools with status
+vlairinfo <tool>           # Detailed tool documentation
+vlairsearch <keyword>      # Find tools by keyword
+vlairstatus                # API keys, cache stats, recent history
 ```
 
 ## Tools
@@ -144,11 +144,11 @@ All tools work without API keys but provide limited results.
 All commands support multiple output formats:
 
 ```bash
-secops analyze input.eml                  # Console (human-readable)
-secops analyze input.eml --json           # JSON (machine-readable)
-secops analyze input.eml --quiet          # Minimal (verdict + score)
-secops analyze input.eml --report html    # HTML report file
-secops analyze input.eml --report md      # Markdown report file
+vlairanalyze input.eml                  # Console (human-readable)
+vlairanalyze input.eml --json           # JSON (machine-readable)
+vlairanalyze input.eml --quiet          # Minimal (verdict + score)
+vlairanalyze input.eml --report html    # HTML report file
+vlairanalyze input.eml --report md      # Markdown report file
 ```
 
 Exit codes for automation: 0 = Clean, 1 = Suspicious, 2 = Malicious, 3 = Error.
@@ -158,15 +158,15 @@ Exit codes for automation: 0 = Clean, 1 = Suspicious, 2 = Malicious, 3 = Error.
 ### Docker
 
 ```bash
-docker build -t secops-helper .
-docker run --rm --env-file .env -v $(pwd)/data:/data secops-helper analyze /data/suspicious.eml
+docker build -t vlair .
+docker run --rm --env-file .env -v $(pwd)/data:/data vlair analyze /data/suspicious.eml
 ```
 
 Or with Docker Compose (includes Redis cache):
 
 ```bash
 docker-compose up -d
-docker-compose run --rm secops-helper analyze /data/suspicious.eml
+docker-compose run --rm vlair analyze /data/suspicious.eml
 ```
 
 ### Web dashboard
@@ -176,15 +176,6 @@ A Flask-based web UI is available for browser-based analysis (experimental).
 ```bash
 pip install -r requirements-webapp.txt
 # Web dashboard is in development
-```
-
-### Legacy CLI
-
-The legacy unified CLI is also available:
-
-```bash
-secops-helper hash 44d88612fea8a8f36de82e1278abb02f
-secops-helper intel malicious.com
 ```
 
 ## Troubleshooting
@@ -197,7 +188,7 @@ secops-helper intel malicious.com
 
 **PCAP permission denied** -- May need elevated privileges for raw packet access.
 
-**Check tool/API status** -- Run `secops status` to verify configuration.
+**Check tool/API status** -- Run `vlair status` to verify configuration.
 
 ## Contributing
 

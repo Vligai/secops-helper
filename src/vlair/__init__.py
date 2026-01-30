@@ -1,5 +1,5 @@
 """
-SecOps Helper - Security Operations Toolkit
+vlair - Security Operations Toolkit
 
 A collection of security operations tools for SOC analysts,
 incident responders, and security researchers.
