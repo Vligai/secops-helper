@@ -1,31 +1,31 @@
-# PowerShell completion for SecOps Helper
-# Import: . .\completions\secops.ps1
+# PowerShell completion for vlair
+# Import: . .\completions\vlair.ps1
 
-$script:secopsCommands = @(
+$script:vlairCommands = @(
     'analyze', 'check', 'workflow', 'investigate', 'status',
     'list', 'info', 'search',
     'eml', 'ioc', 'hash', 'intel', 'log', 'pcap', 'url',
     'yara', 'cert', 'deobfuscate', 'feeds', 'carve'
 )
 
-$script:secopsWorkflows = @(
+$script:vlairWorkflows = @(
     'phishing-email', 'malware-triage', 'ioc-hunt',
     'network-forensics', 'log-investigation'
 )
 
-$script:secopsCheckTypes = @('hash', 'domain', 'ip', 'url')
+$script:vlairCheckTypes = @('hash', 'domain', 'ip', 'url')
 
-$script:secopsFlags = @(
+$script:vlairFlags = @(
     '--verbose', '-v', '--json', '-j', '--quiet', '-q',
     '--report', '--output', '-o'
 )
 
-$script:secopsTools = @(
+$script:vlairTools = @(
     'eml', 'ioc', 'hash', 'intel', 'log', 'pcap', 'url',
     'yara', 'cert', 'deobfuscate', 'feeds', 'carve'
 )
 
-Register-ArgumentCompleter -CommandName secops, secops.py -Native -ScriptBlock {
+Register-ArgumentCompleter -CommandName vlair, vlair.py -Native -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
     $tokens = $commandAst.ToString() -split '\s+'
@@ -33,7 +33,7 @@ Register-ArgumentCompleter -CommandName secops, secops.py -Native -ScriptBlock {
 
     # Completing the subcommand (position 1)
     if ($tokenCount -le 2) {
-        $script:secopsCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        $script:vlairCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
             [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
         }
         return
@@ -52,7 +52,7 @@ Register-ArgumentCompleter -CommandName secops, secops.py -Native -ScriptBlock {
         }
         'check' {
             if ($tokenCount -le 3) {
-                $script:secopsCheckTypes | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                $script:vlairCheckTypes | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
                 }
             } elseif ($wordToComplete.StartsWith('-')) {
@@ -64,7 +64,7 @@ Register-ArgumentCompleter -CommandName secops, secops.py -Native -ScriptBlock {
         }
         'workflow' {
             if ($tokenCount -le 3) {
-                $script:secopsWorkflows | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                $script:vlairWorkflows | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
                 }
             } elseif ($wordToComplete.StartsWith('-')) {
@@ -75,7 +75,7 @@ Register-ArgumentCompleter -CommandName secops, secops.py -Native -ScriptBlock {
             }
         }
         'info' {
-            $script:secopsTools | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            $script:vlairTools | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                 [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
             }
         }
@@ -85,18 +85,18 @@ Register-ArgumentCompleter -CommandName secops, secops.py -Native -ScriptBlock {
     }
 }
 
-# Also register for "python secops.py" invocation
+# Also register for "python vlair.py" invocation
 Register-ArgumentCompleter -CommandName python -Native -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
     $tokens = $commandAst.ToString() -split '\s+'
 
-    # Only activate if second token is secops.py
-    if ($tokens.Count -ge 2 -and $tokens[1] -like '*secops.py') {
+    # Only activate if second token is vlair.py
+    if ($tokens.Count -ge 2 -and $tokens[1] -like '*vlair.py') {
         $tokenCount = $tokens.Count
 
         if ($tokenCount -le 3) {
-            $script:secopsCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            $script:vlairCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                 [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
             }
             return
@@ -107,20 +107,20 @@ Register-ArgumentCompleter -CommandName python -Native -ScriptBlock {
         switch ($subCommand) {
             'check' {
                 if ($tokenCount -le 4) {
-                    $script:secopsCheckTypes | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                    $script:vlairCheckTypes | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
                     }
                 }
             }
             'workflow' {
                 if ($tokenCount -le 4) {
-                    $script:secopsWorkflows | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                    $script:vlairWorkflows | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
                     }
                 }
             }
             'info' {
-                $script:secopsTools | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                $script:vlairTools | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
                 }
             }
