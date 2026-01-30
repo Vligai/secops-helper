@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Analysis History Tracker - Records analysis runs for status dashboard
-Part of SecOps Helper Operationalization (Phase 5)
+Part of vlair Operationalization (Phase 5)
 """
 
 import sqlite3

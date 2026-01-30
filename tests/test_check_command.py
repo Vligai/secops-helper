@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unit tests for the secops check command
+Unit tests for the vlair check command
 Tests the quick indicator lookup functionality
 """
 

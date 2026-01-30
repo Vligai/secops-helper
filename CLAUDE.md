@@ -32,18 +32,18 @@ The project is transitioning from a collection of tools to an operational platfo
 
 **1. Smart Analyze Command**
 ```bash
-vlairanalyze suspicious.eml    # Auto-detects email, runs full analysis
-vlairanalyze 44d88612...       # Auto-detects hash, checks reputation
-vlairanalyze malicious.com     # Auto-detects domain, gets intel
+vlair analyze suspicious.eml    # Auto-detects email, runs full analysis
+vlair analyze 44d88612...       # Auto-detects hash, checks reputation
+vlair analyze malicious.com     # Auto-detects domain, gets intel
 ```
 
 **2. Pre-built Workflows** (✅ IMPLEMENTED)
 ```bash
-vlairworkflow phishing-email suspicious.eml   # 7-step phishing investigation
-vlairworkflow malware-triage sample.exe       # 7-step malware analysis
-vlairworkflow ioc-hunt iocs.txt               # 6-step bulk IOC hunting
-vlairworkflow network-forensics capture.pcap  # 7-step PCAP forensics
-vlairworkflow log-investigation access.log    # 7-step log analysis
+vlair workflow phishing-email suspicious.eml   # 7-step phishing investigation
+vlair workflow malware-triage sample.exe       # 7-step malware analysis
+vlair workflow ioc-hunt iocs.txt               # 6-step bulk IOC hunting
+vlair workflow network-forensics capture.pcap  # 7-step PCAP forensics
+vlair workflow log-investigation access.log    # 7-step log analysis
 ```
 
 **3. Actionable Output**
@@ -54,7 +54,7 @@ vlairworkflow log-investigation access.log    # 7-step log analysis
 
 **4. Interactive Investigation Mode**
 ```bash
-vlairinvestigate   # Guided Q&A for users who don't know what they have
+vlair investigate   # Guided Q&A for users who don't know what they have
 ```
 
 ### Implementation Priority
@@ -101,7 +101,7 @@ vlair/
         │
         ├── cli/           # Command-line interfaces
         │   ├── __init__.py
-        │   ├── main.py    # Primary CLI (vlaircommand)
+        │   ├── main.py    # Primary CLI (vlair command)
         │   └── legacy.py  # Legacy CLI (vlair command)
         │
         ├── core/          # Orchestration engine
@@ -263,18 +263,18 @@ After installation (`pip install -e .`), the tools are available via command-lin
 
 ```bash
 # Primary CLI (smart analysis)
-vlairanalyze suspicious.eml    # Auto-detects input type
-vlairanalyze 44d88612...       # Hash lookup
-vlairanalyze malicious.com     # Domain intel
+vlair analyze suspicious.eml    # Auto-detects input type
+vlair analyze 44d88612...       # Hash lookup
+vlair analyze malicious.com     # Domain intel
 
 # Workflows
-vlairworkflow phishing-email suspicious.eml
-vlairworkflow malware-triage sample.exe
+vlair workflow phishing-email suspicious.eml
+vlair workflow malware-triage sample.exe
 
 # Individual tools
-vlairhash 44d88612fea8a8f36de82e1278abb02f
-vlairintel malicious.com
-vlairioc --file report.txt
+vlair hash 44d88612fea8a8f36de82e1278abb02f
+vlair intel malicious.com
+vlair ioc --file report.txt
 
 # Legacy CLI (also available)
 vlair hash 44d88612fea8a8f36de82e1278abb02f
@@ -296,25 +296,25 @@ The central system organizes tools into 7 categories:
 
 ```bash
 # Smart analysis with auto-detection
-vlairanalyze suspicious.eml --verbose
-vlairanalyze 44d88612fea8a8f36de82e1278abb02f
-vlairanalyze malicious.com --json
+vlair analyze suspicious.eml --verbose
+vlair analyze 44d88612fea8a8f36de82e1278abb02f
+vlair analyze malicious.com --json
 
 # Pre-built workflows
-vlairworkflow phishing-email suspicious.eml
-vlairworkflow malware-triage sample.exe
-vlairworkflow ioc-hunt iocs.txt
+vlair workflow phishing-email suspicious.eml
+vlair workflow malware-triage sample.exe
+vlair workflow ioc-hunt iocs.txt
 
 # Individual tools
-vlairhash 44d88612fea8a8f36de82e1278abb02f
-vlairintel malicious.com
-vlairyara scan /samples/ --rules rules/malware/
-vlaircert https://example.com
-vlairioc --file threat_report.txt
+vlair hash 44d88612fea8a8f36de82e1278abb02f
+vlair intel malicious.com
+vlair yara scan /samples/ --rules rules/malware/
+vlair cert https://example.com
+vlair ioc --file threat_report.txt
 
 # Help and information
-vlair--help
-vlairhash --help
+vlair --help
+vlair hash --help
 ```
 
 ### Installation

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified Cache Manager for SecOps Helper
+Unified Cache Manager for vlair
 
 Provides Redis-based caching with fallback to in-memory/SQLite caching.
 Supports TTL, namespacing, and statistics tracking.
@@ -68,11 +68,11 @@ class CacheManager:
 
     def _make_key(self, namespace: str, key: str) -> str:
         """Generate namespaced cache key"""
-        return f"secops:{namespace}:{key}"
+        return f"vlair:{namespace}:{key}"
 
     def _make_stats_key(self, namespace: str) -> str:
         """Generate stats key for namespace"""
-        return f"secops:stats:{namespace}"
+        return f"vlair:stats:{namespace}"
 
     def get(self, key: str, namespace: str = "default") -> Optional[Any]:
         """
@@ -206,7 +206,7 @@ class CacheManager:
                 return 0
             else:
                 # Clear from memory cache
-                pattern = f"secops:{namespace}:"
+                pattern = f"vlair:{namespace}:"
                 keys_to_delete = [k for k in self.fallback_cache.keys() if k.startswith(pattern)]
                 for key in keys_to_delete:
                     del self.fallback_cache[key]
@@ -226,7 +226,7 @@ class CacheManager:
         """
         try:
             if self.redis_client:
-                keys = self.redis_client.keys("secops:*")
+                keys = self.redis_client.keys("vlair:*")
                 if keys:
                     self.redis_client.delete(*keys)
             else:
@@ -303,7 +303,7 @@ class CacheManager:
         """
         try:
             if self.redis_client:
-                keys = self.redis_client.keys("secops:*:*")
+                keys = self.redis_client.keys("vlair:*:*")
                 namespaces = set()
                 for key in keys:
                     parts = key.split(":")
