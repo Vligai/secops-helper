@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-SecOps Helper - Central Control System
+vlair - Central Control System
 A unified security operations toolkit with automatic tool discovery and management.
 
 Usage:
-    secops                      # Interactive mode
-    secops analyze <input>      # Smart analyze (auto-detect input type)
-    secops check <type> <value> # Quick indicator lookup
-    secops workflow <name> <in> # Run pre-built investigation workflow
-    secops investigate          # Interactive guided investigation
-    secops status               # Show system status dashboard
-    secops list                 # List all available tools
-    secops <tool> [args]        # Run a specific tool
-    secops info <tool>          # Get detailed info about a tool
-    secops search <keyword>     # Search for tools by keyword
+    vlair                      # Interactive mode
+    vlair analyze <input>      # Smart analyze (auto-detect input type)
+    vlair check <type> <value> # Quick indicator lookup
+    vlair workflow <name> <in> # Run pre-built investigation workflow
+    vlair investigate          # Interactive guided investigation
+    vlair status               # Show system status dashboard
+    vlair list                 # List all available tools
+    vlair <tool> [args]        # Run a specific tool
+    vlair info <tool>          # Get detailed info about a tool
+    vlair search <keyword>     # Search for tools by keyword
 """
 
 import sys
@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import argparse
 
-from secops_helper.tools import get_tool_registry
+from vlair.tools import get_tool_registry
 
 
 class ToolDiscovery:
@@ -42,12 +42,12 @@ class ToolDiscovery:
         tool_definitions = get_tool_registry()
 
         # Verify and register tools - get the package root
-        package_root = Path(__file__).parent.parent  # src/secops_helper
+        package_root = Path(__file__).parent.parent  # src/vlair
         for tool_id, metadata in tool_definitions.items():
-            # Convert module name to path: secops_helper.tools.eml_parser -> tools/eml_parser.py
+            # Convert module name to path: vlair.tools.eml_parser -> tools/eml_parser.py
             module_parts = metadata["module"].split(".")
             if len(module_parts) >= 3:
-                # Expected format: secops_helper.tools.tool_name
+                # Expected format: vlair.tools.tool_name
                 relative_path = "/".join(module_parts[1:]) + ".py"
                 module_path = package_root / relative_path
             else:
@@ -102,7 +102,7 @@ class ToolManager:
 
         if not tool:
             print(f"Error: Unknown tool '{tool_id}'", file=sys.stderr)
-            print(f"Run 'secops list' to see available tools", file=sys.stderr)
+            print(f"Run 'vlair list' to see available tools", file=sys.stderr)
             sys.exit(1)
 
         if not tool["available"]:
@@ -151,7 +151,7 @@ class InteractiveMenu:
     def show_main_menu(self):
         """Display the main menu"""
         print("\n" + "=" * 70)
-        print("  SecOps Helper - Security Operations Toolkit")
+        print("  vlair - Security Operations Toolkit")
         print("=" * 70)
         print("\nWhat would you like to do?\n")
         print("  1. Browse tools by category")
@@ -583,8 +583,8 @@ def main():
 
             _analyze_start = _time.time()
 
-            from secops_helper.core.analyzer import Analyzer
-            from secops_helper.core.reporter import Reporter
+            from vlair.core.analyzer import Analyzer
+            from vlair.core.reporter import Reporter
 
             # Parse analyze arguments
             input_value = sys.argv[2]
@@ -648,7 +648,7 @@ def main():
 
             # Generate report if requested
             if report_format:
-                from secops_helper.core.report_generator import ReportGenerator
+                from vlair.core.report_generator import ReportGenerator
 
                 generator = ReportGenerator()
                 report_path = generator.generate(result, report_format, output_path)
@@ -656,7 +656,7 @@ def main():
 
             # Record in history
             try:
-                from secops_helper.core.history import AnalysisHistory
+                from vlair.core.history import AnalysisHistory
 
                 history = AnalysisHistory()
                 scorer = result["scorer"]
@@ -715,7 +715,7 @@ def main():
                     print("Usage: secops check hash <md5|sha1|sha256>", file=sys.stderr)
                     sys.exit(1)
                 hash_value = sys.argv[3]
-                from secops_helper.tools.hash_lookup import HashLookup
+                from vlair.tools.hash_lookup import HashLookup
 
                 lookup = HashLookup(verbose=verbose)
                 result = lookup.lookup(hash_value)
@@ -746,7 +746,7 @@ def main():
                     print("Usage: secops check domain <domain>", file=sys.stderr)
                     sys.exit(1)
                 domain_value = sys.argv[3]
-                from secops_helper.tools.domain_ip_intel import (
+                from vlair.tools.domain_ip_intel import (
                     DomainIPIntelligence as DomainIPIntel,
                 )
 
@@ -775,7 +775,7 @@ def main():
                     print("Usage: secops check ip <ip_address>", file=sys.stderr)
                     sys.exit(1)
                 ip_value = sys.argv[3]
-                from secops_helper.tools.domain_ip_intel import (
+                from vlair.tools.domain_ip_intel import (
                     DomainIPIntelligence as DomainIPIntel,
                 )
 
@@ -804,7 +804,7 @@ def main():
                     print("Usage: secops check url <url>", file=sys.stderr)
                     sys.exit(1)
                 url_value = sys.argv[3]
-                from secops_helper.tools.url_analyzer import URLAnalyzer
+                from vlair.tools.url_analyzer import URLAnalyzer
 
                 analyzer = URLAnalyzer(verbose=verbose)
                 result = analyzer.analyze(url_value)
@@ -825,8 +825,8 @@ def main():
 
             elif os.path.isfile(check_type):
                 # Auto-detect file as IOC list
-                from secops_helper.core.analyzer import Analyzer
-                from secops_helper.core.reporter import Reporter
+                from vlair.core.analyzer import Analyzer
+                from vlair.core.reporter import Reporter
 
                 analyzer_instance = Analyzer(verbose=verbose)
                 result = analyzer_instance.analyze(check_type)
@@ -864,7 +864,7 @@ def main():
             # Record in history
             duration = _time.time() - start_time
             try:
-                from secops_helper.core.history import AnalysisHistory
+                from vlair.core.history import AnalysisHistory
 
                 history = AnalysisHistory()
                 verdict_val = (
@@ -937,8 +937,8 @@ def main():
                     output_path = args_list[i + 1]
 
         try:
-            from secops_helper.core.workflow import WorkflowRegistry
-            from secops_helper.core.reporter import Reporter
+            from vlair.core.workflow import WorkflowRegistry
+            from vlair.core.reporter import Reporter
 
             # Import workflows to register them
             from workflows import (
@@ -962,7 +962,7 @@ def main():
 
             # Generate report before potentially modifying result for JSON output
             if report_format:
-                from secops_helper.core.report_generator import ReportGenerator
+                from vlair.core.report_generator import ReportGenerator
 
                 generator = ReportGenerator()
                 report_path = generator.generate(result, report_format, output_path)
@@ -1011,7 +1011,7 @@ def main():
     elif sys.argv[1] == "investigate":
         # Interactive investigation mode
         try:
-            from secops_helper.core.interactive import InteractiveInvestigation
+            from vlair.core.interactive import InteractiveInvestigation
 
             investigation = InteractiveInvestigation()
             investigation.run()
@@ -1110,7 +1110,7 @@ def main():
         # Recent analysis history
         print("\nRecent Analyses:")
         try:
-            from secops_helper.core.history import AnalysisHistory
+            from vlair.core.history import AnalysisHistory
 
             history = AnalysisHistory()
             stats = history.get_stats()
