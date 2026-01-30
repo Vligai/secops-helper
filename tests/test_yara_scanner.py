@@ -27,7 +27,7 @@ class TestYaraRuleValidation:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_validate_valid_rule(self):
         """Test validating a correct YARA rule"""
-        from secops_helper.tools.yara_scanner import YaraRuleManager
+        from vlair.tools.yara_scanner import YaraRuleManager
 
         manager = YaraRuleManager()
 
@@ -48,7 +48,7 @@ class TestYaraRuleValidation:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_validate_invalid_rule(self):
         """Test handling invalid YARA rule syntax"""
-        from secops_helper.tools.yara_scanner import YaraRuleManager
+        from vlair.tools.yara_scanner import YaraRuleManager
 
         manager = YaraRuleManager()
 
@@ -120,7 +120,7 @@ class TestYaraScannerIntegration:
     def test_scanner_without_yara(self):
         """Test behavior when yara-python not installed"""
         # Import the module and check YARA_AVAILABLE flag
-        from secops_helper.tools import yara_scanner
+        from vlair.tools import yara_scanner
 
         # The module should define YARA_AVAILABLE
         assert hasattr(yara_scanner, "YARA_AVAILABLE")
@@ -129,7 +129,7 @@ class TestYaraScannerIntegration:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_scanner_creation(self):
         """Test creating scanner instance"""
-        from secops_helper.tools.yara_scanner import YaraScanner, YaraRuleManager
+        from vlair.tools.yara_scanner import YaraScanner, YaraRuleManager
 
         # Create a simple rule
         with tempfile.NamedTemporaryFile(suffix=".yar", delete=False, mode="w") as f:
@@ -194,7 +194,7 @@ class TestMatchAnalyzer:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_classify_severity_critical(self):
         """Test severity classification for critical tags"""
-        from secops_helper.tools.yara_scanner import MatchAnalyzer
+        from vlair.tools.yara_scanner import MatchAnalyzer
 
         # Create a mock match with critical tags
         mock_match = Mock()
@@ -207,7 +207,7 @@ class TestMatchAnalyzer:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_classify_severity_high(self):
         """Test severity classification for high tags"""
-        from secops_helper.tools.yara_scanner import MatchAnalyzer
+        from vlair.tools.yara_scanner import MatchAnalyzer
 
         mock_match = Mock()
         mock_match.tags = ["trojan", "malware"]
@@ -219,7 +219,7 @@ class TestMatchAnalyzer:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_classify_verdict_clean(self):
         """Test verdict classification with no matches"""
-        from secops_helper.tools.yara_scanner import MatchAnalyzer
+        from vlair.tools.yara_scanner import MatchAnalyzer
 
         verdict, score = MatchAnalyzer.classify_verdict([])
         assert verdict == "clean"
@@ -228,7 +228,7 @@ class TestMatchAnalyzer:
     @pytest.mark.skipif(not YARA_AVAILABLE, reason="yara-python not installed")
     def test_classify_verdict_malicious(self):
         """Test verdict classification with critical matches"""
-        from secops_helper.tools.yara_scanner import MatchAnalyzer
+        from vlair.tools.yara_scanner import MatchAnalyzer
 
         matches = [{"severity": "critical"}]
         verdict, score = MatchAnalyzer.classify_verdict(matches)

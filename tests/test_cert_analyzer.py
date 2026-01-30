@@ -23,7 +23,7 @@ class TestCertificateRetriever:
     @patch("ssl.create_default_context")
     def test_from_https_server_success(self, mock_ctx, mock_conn):
         """Test successful certificate retrieval from server"""
-        from secops_helper.tools.cert_analyzer import CertificateRetriever
+        from vlair.tools.cert_analyzer import CertificateRetriever
 
         # Mock SSL connection
         mock_ssock = MagicMock()
@@ -38,7 +38,7 @@ class TestCertificateRetriever:
     @patch("socket.create_connection")
     def test_from_https_server_connection_error(self, mock_conn):
         """Test handling connection errors"""
-        from secops_helper.tools.cert_analyzer import CertificateRetriever
+        from vlair.tools.cert_analyzer import CertificateRetriever
 
         mock_conn.side_effect = Exception("Connection refused")
 
@@ -47,7 +47,7 @@ class TestCertificateRetriever:
 
     def test_from_file_not_found(self):
         """Test loading from nonexistent file"""
-        from secops_helper.tools.cert_analyzer import CertificateRetriever
+        from vlair.tools.cert_analyzer import CertificateRetriever
 
         result = CertificateRetriever.from_file("/nonexistent/cert.pem")
         assert result is None
@@ -116,15 +116,15 @@ class TestCertificateAnalyzer:
 
     def test_analyzer_creation(self):
         """Test creating analyzer instance"""
-        from secops_helper.tools.cert_analyzer import CertificateAnalyzer
+        from vlair.tools.cert_analyzer import CertificateAnalyzer
 
         analyzer = CertificateAnalyzer(verbose=False)
         assert analyzer is not None
 
-    @patch("secops_helper.tools.cert_analyzer.CertificateRetriever.from_https_server")
+    @patch("vlair.tools.cert_analyzer.CertificateRetriever.from_https_server")
     def test_analyze_https_url(self, mock_retriever):
         """Test analyzing HTTPS URL"""
-        from secops_helper.tools.cert_analyzer import CertificateAnalyzer
+        from vlair.tools.cert_analyzer import CertificateAnalyzer
 
         # Mock certificate data - would need valid DER data
         mock_retriever.return_value = None  # Simulating retrieval failure
@@ -137,7 +137,7 @@ class TestCertificateAnalyzer:
 
     def test_analyze_invalid_url(self):
         """Test analyzing invalid URL"""
-        from secops_helper.tools.cert_analyzer import CertificateAnalyzer
+        from vlair.tools.cert_analyzer import CertificateAnalyzer
 
         analyzer = CertificateAnalyzer(verbose=False)
         result = analyzer.analyze("not-a-valid-url")
