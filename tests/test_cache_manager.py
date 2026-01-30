@@ -31,13 +31,13 @@ class TestCacheManager:
         """Test key generation with namespace"""
         cache = CacheManager()
         key = cache._make_key("test_ns", "my_key")
-        assert key == "secops:test_ns:my_key"
+        assert key == "vlair:test_ns:my_key"
 
     def test_make_stats_key(self):
         """Test stats key generation"""
         cache = CacheManager()
         key = cache._make_stats_key("test_ns")
-        assert key == "secops:stats:test_ns"
+        assert key == "vlair:stats:test_ns"
 
     def test_set_and_get_memory(self):
         """Test set and get with memory backend"""

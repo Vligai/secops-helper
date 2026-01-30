@@ -12,8 +12,8 @@ Parses .eml email files to extract:
 Optional VirusTotal integration for attachment reputation checks.
 
 Usage:
-    secops eml suspicious.eml --vt
-    secops eml phishing.eml --output report.json
+    vlair eml suspicious.eml --vt
+    vlair eml phishing.eml --output report.json
 """
 
 import eml_parser

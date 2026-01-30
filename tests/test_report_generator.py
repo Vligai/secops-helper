@@ -425,7 +425,7 @@ class TestFileGeneration:
         result = self._make_result()
         data = self.gen._build_report_data(result)
         name = self.gen._generate_filename(data, ".html")
-        assert name.startswith("secops_report_")
+        assert name.startswith("vlair_report_")
         assert name.endswith(".html")
         assert "email" in name
 
