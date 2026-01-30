@@ -16,10 +16,7 @@ class AnthropicProvider(AIProvider):
     DEFAULT_MODEL = "claude-3-opus-20240229"
 
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        model: str = DEFAULT_MODEL,
-        timeout: int = 30
+        self, api_key: Optional[str] = None, model: str = DEFAULT_MODEL, timeout: int = 30
     ):
         """
         Initialize Anthropic provider.
@@ -29,7 +26,7 @@ class AnthropicProvider(AIProvider):
             model: Model to use (default: claude-3-opus)
             timeout: Request timeout in seconds
         """
-        self._api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
+        self._api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         self._model = model
         self._timeout = timeout
         self._client = None
@@ -39,14 +36,11 @@ class AnthropicProvider(AIProvider):
         if self._client is None:
             try:
                 import anthropic
-                self._client = anthropic.Anthropic(
-                    api_key=self._api_key,
-                    timeout=self._timeout
-                )
+
+                self._client = anthropic.Anthropic(api_key=self._api_key, timeout=self._timeout)
             except ImportError:
                 raise ImportError(
-                    "Anthropic package not installed. "
-                    "Install with: pip install anthropic"
+                    "Anthropic package not installed. " "Install with: pip install anthropic"
                 )
         return self._client
 
@@ -63,11 +57,7 @@ class AnthropicProvider(AIProvider):
         return bool(self._api_key)
 
     def analyze(
-        self,
-        prompt: str,
-        context: Dict[str, Any],
-        max_tokens: int = 2000,
-        temperature: float = 0.3
+        self, prompt: str, context: Dict[str, Any], max_tokens: int = 2000, temperature: float = 0.3
     ) -> AIResponse:
         """
         Send analysis request to Anthropic Claude.
@@ -85,16 +75,14 @@ class AnthropicProvider(AIProvider):
 
         client = self._get_client()
 
-        system_prompt = context.get('system_prompt', SECURITY_ANALYST_SYSTEM_PROMPT)
+        system_prompt = context.get("system_prompt", SECURITY_ANALYST_SYSTEM_PROMPT)
 
         response = client.messages.create(
             model=self._model,
             max_tokens=max_tokens,
             system=system_prompt,
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=temperature
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
         )
 
         content = response.content[0].text
@@ -105,7 +93,7 @@ class AnthropicProvider(AIProvider):
             confidence=self._extract_confidence(content),
             tokens_used=tokens_used,
             model=self._model,
-            cached=False
+            cached=False,
         )
 
     def _extract_confidence(self, content: str) -> float:
@@ -113,9 +101,9 @@ class AnthropicProvider(AIProvider):
         import re
 
         patterns = [
-            r'(\d+(?:\.\d+)?)\s*%\s*confidence',
-            r'confidence[:\s]+(\d+(?:\.\d+)?)\s*%',
-            r'\((\d+(?:\.\d+)?)\s*%\)',
+            r"(\d+(?:\.\d+)?)\s*%\s*confidence",
+            r"confidence[:\s]+(\d+(?:\.\d+)?)\s*%",
+            r"\((\d+(?:\.\d+)?)\s*%\)",
         ]
 
         for pattern in patterns:

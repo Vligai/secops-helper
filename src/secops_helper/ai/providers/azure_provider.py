@@ -21,7 +21,7 @@ class AzureOpenAIProvider(AIProvider):
         endpoint: Optional[str] = None,
         deployment_name: Optional[str] = None,
         api_version: str = DEFAULT_API_VERSION,
-        timeout: int = 30
+        timeout: int = 30,
     ):
         """
         Initialize Azure OpenAI provider.
@@ -33,12 +33,9 @@ class AzureOpenAIProvider(AIProvider):
             api_version: Azure API version
             timeout: Request timeout in seconds
         """
-        self._api_key = api_key or os.getenv('AZURE_OPENAI_API_KEY')
-        self._endpoint = endpoint or os.getenv('AZURE_OPENAI_ENDPOINT')
-        self._deployment_name = deployment_name or os.getenv(
-            'AZURE_OPENAI_DEPLOYMENT',
-            'gpt-4'
-        )
+        self._api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
+        self._endpoint = endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
+        self._deployment_name = deployment_name or os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4")
         self._api_version = api_version
         self._timeout = timeout
         self._client = None
@@ -48,16 +45,16 @@ class AzureOpenAIProvider(AIProvider):
         if self._client is None:
             try:
                 from openai import AzureOpenAI
+
                 self._client = AzureOpenAI(
                     api_key=self._api_key,
                     api_version=self._api_version,
                     azure_endpoint=self._endpoint,
-                    timeout=self._timeout
+                    timeout=self._timeout,
                 )
             except ImportError:
                 raise ImportError(
-                    "OpenAI package not installed. "
-                    "Install with: pip install openai"
+                    "OpenAI package not installed. " "Install with: pip install openai"
                 )
         return self._client
 
@@ -74,11 +71,7 @@ class AzureOpenAIProvider(AIProvider):
         return bool(self._api_key and self._endpoint and self._deployment_name)
 
     def analyze(
-        self,
-        prompt: str,
-        context: Dict[str, Any],
-        max_tokens: int = 2000,
-        temperature: float = 0.3
+        self, prompt: str, context: Dict[str, Any], max_tokens: int = 2000, temperature: float = 0.3
     ) -> AIResponse:
         """
         Send analysis request to Azure OpenAI.
@@ -96,16 +89,16 @@ class AzureOpenAIProvider(AIProvider):
 
         client = self._get_client()
 
-        system_prompt = context.get('system_prompt', SECURITY_ANALYST_SYSTEM_PROMPT)
+        system_prompt = context.get("system_prompt", SECURITY_ANALYST_SYSTEM_PROMPT)
 
         response = client.chat.completions.create(
             model=self._deployment_name,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
             max_tokens=max_tokens,
-            temperature=temperature
+            temperature=temperature,
         )
 
         content = response.choices[0].message.content
@@ -116,7 +109,7 @@ class AzureOpenAIProvider(AIProvider):
             confidence=self._extract_confidence(content),
             tokens_used=tokens_used,
             model=self._deployment_name,
-            cached=False
+            cached=False,
         )
 
     def _extract_confidence(self, content: str) -> float:
@@ -124,9 +117,9 @@ class AzureOpenAIProvider(AIProvider):
         import re
 
         patterns = [
-            r'(\d+(?:\.\d+)?)\s*%\s*confidence',
-            r'confidence[:\s]+(\d+(?:\.\d+)?)\s*%',
-            r'\((\d+(?:\.\d+)?)\s*%\)',
+            r"(\d+(?:\.\d+)?)\s*%\s*confidence",
+            r"confidence[:\s]+(\d+(?:\.\d+)?)\s*%",
+            r"\((\d+(?:\.\d+)?)\s*%\)",
         ]
 
         for pattern in patterns:

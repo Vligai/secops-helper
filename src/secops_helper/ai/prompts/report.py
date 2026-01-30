@@ -75,9 +75,7 @@ MARKDOWN_REPORT_TEMPLATE = """
 
 
 def build_report_prompt(
-    analysis_results: Dict[str, Any],
-    report_format: str = "markdown",
-    audience: str = "technical"
+    analysis_results: Dict[str, Any], report_format: str = "markdown", audience: str = "technical"
 ) -> str:
     """
     Build a report generation prompt from analysis results.
@@ -90,25 +88,21 @@ def build_report_prompt(
     Returns:
         Formatted prompt for report generation
     """
-    iocs_summary = _format_iocs_summary(analysis_results.get('iocs', {}))
+    iocs_summary = _format_iocs_summary(analysis_results.get("iocs", {}))
 
     if report_format == "jira":
-        return JIRA_REPORT_TEMPLATE.format(
-            analysis_results=json.dumps(analysis_results, indent=2)
-        )
+        return JIRA_REPORT_TEMPLATE.format(analysis_results=json.dumps(analysis_results, indent=2))
 
     return REPORT_PROMPT_TEMPLATE.format(
         analysis_results=json.dumps(analysis_results, indent=2),
         iocs_summary=iocs_summary,
         report_format=report_format,
-        audience=audience
+        audience=audience,
     )
 
 
 def format_markdown_report(
-    analysis_results: Dict[str, Any],
-    primary_ioc: str,
-    date: Optional[str] = None
+    analysis_results: Dict[str, Any], primary_ioc: str, date: Optional[str] = None
 ) -> str:
     """
     Format analysis results as a Markdown report.
@@ -127,37 +121,43 @@ def format_markdown_report(
         date = datetime.now().strftime("%Y-%m-%d")
 
     # Build verdict section
-    verdict = analysis_results.get('verdict', 'UNKNOWN')
-    confidence = analysis_results.get('confidence', 0)
-    severity = analysis_results.get('severity', 'UNKNOWN')
+    verdict = analysis_results.get("verdict", "UNKNOWN")
+    confidence = analysis_results.get("confidence", 0)
+    severity = analysis_results.get("severity", "UNKNOWN")
     verdict_text = f"**{verdict}** ({int(confidence * 100)}% confidence) - Severity: **{severity}**"
 
     # Build executive summary
-    key_findings = analysis_results.get('key_findings', [])
-    threat_context = analysis_results.get('threat_context', '')
-    executive_summary = threat_context if threat_context else (
-        key_findings[0] if key_findings else "Analysis completed."
+    key_findings = analysis_results.get("key_findings", [])
+    threat_context = analysis_results.get("threat_context", "")
+    executive_summary = (
+        threat_context
+        if threat_context
+        else (key_findings[0] if key_findings else "Analysis completed.")
     )
 
     # Build technical findings
-    findings_text = "\n".join([f"- {f}" for f in key_findings]) if key_findings else "No significant findings."
+    findings_text = (
+        "\n".join([f"- {f}" for f in key_findings]) if key_findings else "No significant findings."
+    )
 
     # Build recommended actions
-    actions = analysis_results.get('recommended_actions', [])
+    actions = analysis_results.get("recommended_actions", [])
     if actions:
-        actions_text = "\n".join([
-            f"### {a.get('priority', 'Action').upper()}\n- {a.get('action', '')}: {a.get('details', '')}"
-            for a in actions
-        ])
+        actions_text = "\n".join(
+            [
+                f"### {a.get('priority', 'Action').upper()}\n- {a.get('action', '')}: {a.get('details', '')}"
+                for a in actions
+            ]
+        )
     else:
         actions_text = "No specific actions recommended."
 
     # Build IOCs table
-    iocs = analysis_results.get('iocs', {})
+    iocs = analysis_results.get("iocs", {})
     iocs_table = _build_iocs_table(iocs)
 
     # Build MITRE mapping
-    mitre = analysis_results.get('mitre_attack', [])
+    mitre = analysis_results.get("mitre_attack", [])
     mitre_mapping = ", ".join(mitre) if mitre else "Not mapped"
 
     return MARKDOWN_REPORT_TEMPLATE.format(
@@ -168,7 +168,7 @@ def format_markdown_report(
         technical_findings=findings_text,
         recommended_actions=actions_text,
         iocs_table=iocs_table,
-        mitre_mapping=mitre_mapping
+        mitre_mapping=mitre_mapping,
     )
 
 
@@ -196,9 +196,7 @@ def _build_iocs_table(iocs: Dict[str, List[str]]) -> str:
 
 
 def format_json_report(
-    analysis_results: Dict[str, Any],
-    primary_ioc: str,
-    metadata: Optional[Dict[str, Any]] = None
+    analysis_results: Dict[str, Any], primary_ioc: str, metadata: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     Format analysis results as a structured JSON report.
@@ -218,8 +216,8 @@ def format_json_report(
             "generated_at": datetime.now().isoformat(),
             "primary_ioc": primary_ioc,
             "tool": "secops-helper",
-            "version": "5.0.0"
+            "version": "5.0.0",
         },
         "analysis": analysis_results,
-        "metadata": metadata or {}
+        "metadata": metadata or {},
     }

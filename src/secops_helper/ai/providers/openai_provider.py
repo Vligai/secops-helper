@@ -20,7 +20,7 @@ class OpenAIProvider(AIProvider):
         api_key: Optional[str] = None,
         model: str = DEFAULT_MODEL,
         organization: Optional[str] = None,
-        timeout: int = 30
+        timeout: int = 30,
     ):
         """
         Initialize OpenAI provider.
@@ -31,7 +31,7 @@ class OpenAIProvider(AIProvider):
             organization: OpenAI organization ID (optional)
             timeout: Request timeout in seconds
         """
-        self._api_key = api_key or os.getenv('OPENAI_API_KEY')
+        self._api_key = api_key or os.getenv("OPENAI_API_KEY")
         self._model = model
         self._organization = organization
         self._timeout = timeout
@@ -42,15 +42,13 @@ class OpenAIProvider(AIProvider):
         if self._client is None:
             try:
                 from openai import OpenAI
+
                 self._client = OpenAI(
-                    api_key=self._api_key,
-                    organization=self._organization,
-                    timeout=self._timeout
+                    api_key=self._api_key, organization=self._organization, timeout=self._timeout
                 )
             except ImportError:
                 raise ImportError(
-                    "OpenAI package not installed. "
-                    "Install with: pip install openai"
+                    "OpenAI package not installed. " "Install with: pip install openai"
                 )
         return self._client
 
@@ -75,11 +73,7 @@ class OpenAIProvider(AIProvider):
             return False
 
     def analyze(
-        self,
-        prompt: str,
-        context: Dict[str, Any],
-        max_tokens: int = 2000,
-        temperature: float = 0.3
+        self, prompt: str, context: Dict[str, Any], max_tokens: int = 2000, temperature: float = 0.3
     ) -> AIResponse:
         """
         Send analysis request to OpenAI.
@@ -97,16 +91,16 @@ class OpenAIProvider(AIProvider):
 
         client = self._get_client()
 
-        system_prompt = context.get('system_prompt', SECURITY_ANALYST_SYSTEM_PROMPT)
+        system_prompt = context.get("system_prompt", SECURITY_ANALYST_SYSTEM_PROMPT)
 
         response = client.chat.completions.create(
             model=self._model,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
             max_tokens=max_tokens,
-            temperature=temperature
+            temperature=temperature,
         )
 
         content = response.choices[0].message.content
@@ -117,7 +111,7 @@ class OpenAIProvider(AIProvider):
             confidence=self._extract_confidence(content),
             tokens_used=tokens_used,
             model=self._model,
-            cached=False
+            cached=False,
         )
 
     def _extract_confidence(self, content: str) -> float:
@@ -134,9 +128,9 @@ class OpenAIProvider(AIProvider):
 
         # Look for patterns like "92% confidence" or "(92% confidence)"
         patterns = [
-            r'(\d+(?:\.\d+)?)\s*%\s*confidence',
-            r'confidence[:\s]+(\d+(?:\.\d+)?)\s*%',
-            r'\((\d+(?:\.\d+)?)\s*%\)',
+            r"(\d+(?:\.\d+)?)\s*%\s*confidence",
+            r"confidence[:\s]+(\d+(?:\.\d+)?)\s*%",
+            r"\((\d+(?:\.\d+)?)\s*%\)",
         ]
 
         for pattern in patterns:
@@ -159,6 +153,7 @@ class OpenAIProvider(AIProvider):
         """
         try:
             import tiktoken
+
             encoding = tiktoken.encoding_for_model(self._model)
             return len(encoding.encode(text))
         except ImportError:

@@ -82,7 +82,7 @@ def build_analysis_prompt(
     behavioral_data: Optional[Dict[str, Any]] = None,
     org_context: Optional[Dict[str, str]] = None,
     related_iocs: Optional[Dict[str, Any]] = None,
-    historical_data: Optional[Dict[str, Any]] = None
+    historical_data: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Build an analysis prompt from threat intelligence data.
@@ -106,7 +106,7 @@ def build_analysis_prompt(
         return template.format(
             input_type=input_type,
             input_value=input_value,
-            summary_data=_summarize_threat_intel(threat_intel)
+            summary_data=_summarize_threat_intel(threat_intel),
         )
 
     elif depth == "thorough":
@@ -116,13 +116,17 @@ def build_analysis_prompt(
             input_type=input_type,
             input_value=input_value,
             threat_intel_json=json.dumps(threat_intel, indent=2),
-            behavioral_data=json.dumps(behavioral_data, indent=2) if behavioral_data else "Not available",
+            behavioral_data=(
+                json.dumps(behavioral_data, indent=2) if behavioral_data else "Not available"
+            ),
             related_iocs=json.dumps(related_iocs, indent=2) if related_iocs else "Not available",
-            historical_data=json.dumps(historical_data, indent=2) if historical_data else "Not available",
-            org_industry=org.get('industry', 'Not specified'),
-            org_size=org.get('size', 'Not specified'),
-            critical_assets=org.get('critical_assets', 'Not specified'),
-            org_region=org.get('region', 'Not specified')
+            historical_data=(
+                json.dumps(historical_data, indent=2) if historical_data else "Not available"
+            ),
+            org_industry=org.get("industry", "Not specified"),
+            org_size=org.get("size", "Not specified"),
+            critical_assets=org.get("critical_assets", "Not specified"),
+            org_region=org.get("region", "Not specified"),
         )
 
     else:  # standard
@@ -132,10 +136,12 @@ def build_analysis_prompt(
             input_type=input_type,
             input_value=input_value,
             threat_intel_json=json.dumps(threat_intel, indent=2),
-            behavioral_data=json.dumps(behavioral_data, indent=2) if behavioral_data else "Not available",
-            org_industry=org.get('industry', 'Not specified'),
-            org_size=org.get('size', 'Not specified'),
-            critical_assets=org.get('critical_assets', 'Not specified')
+            behavioral_data=(
+                json.dumps(behavioral_data, indent=2) if behavioral_data else "Not available"
+            ),
+            org_industry=org.get("industry", "Not specified"),
+            org_size=org.get("size", "Not specified"),
+            critical_assets=org.get("critical_assets", "Not specified"),
         )
 
 
@@ -152,41 +158,41 @@ def _summarize_threat_intel(threat_intel: Dict[str, Any]) -> str:
     summary_lines = []
 
     # VirusTotal summary
-    if 'virustotal' in threat_intel:
-        vt = threat_intel['virustotal']
-        if 'detection_ratio' in vt:
+    if "virustotal" in threat_intel:
+        vt = threat_intel["virustotal"]
+        if "detection_ratio" in vt:
             summary_lines.append(f"VirusTotal: {vt['detection_ratio']}")
-        if 'malware_families' in vt:
+        if "malware_families" in vt:
             summary_lines.append(f"Families: {', '.join(vt['malware_families'][:3])}")
 
     # MalwareBazaar summary
-    if 'malwarebazaar' in threat_intel:
-        mb = threat_intel['malwarebazaar']
-        if 'signature' in mb:
+    if "malwarebazaar" in threat_intel:
+        mb = threat_intel["malwarebazaar"]
+        if "signature" in mb:
             summary_lines.append(f"MalwareBazaar: {mb['signature']}")
-        if 'first_seen' in mb:
+        if "first_seen" in mb:
             summary_lines.append(f"First seen: {mb['first_seen']}")
 
     # AbuseIPDB summary
-    if 'abuseipdb' in threat_intel:
-        abuse = threat_intel['abuseipdb']
-        if 'abuse_confidence_score' in abuse:
+    if "abuseipdb" in threat_intel:
+        abuse = threat_intel["abuseipdb"]
+        if "abuse_confidence_score" in abuse:
             summary_lines.append(f"AbuseIPDB score: {abuse['abuse_confidence_score']}%")
 
     # Risk score if present
-    if 'risk_score' in threat_intel:
+    if "risk_score" in threat_intel:
         summary_lines.append(f"Risk score: {threat_intel['risk_score']}/100")
 
     if not summary_lines:
         summary_lines.append("No significant threat intelligence found")
 
-    return '\n'.join(summary_lines)
+    return "\n".join(summary_lines)
 
 
 def build_correlation_prompt(
     iocs: list,
     threat_intel_results: Dict[str, Dict[str, Any]],
-    org_context: Optional[Dict[str, str]] = None
+    org_context: Optional[Dict[str, str]] = None,
 ) -> str:
     """
     Build a correlation analysis prompt for multiple IOCs.
@@ -201,10 +207,7 @@ def build_correlation_prompt(
     """
     org = org_context or {}
 
-    iocs_formatted = "\n".join([
-        f"- {ioc['type']}: {ioc['value']}"
-        for ioc in iocs
-    ])
+    iocs_formatted = "\n".join([f"- {ioc['type']}: {ioc['value']}" for ioc in iocs])
 
     return f"""
 Perform a correlation analysis of the following indicators of compromise.

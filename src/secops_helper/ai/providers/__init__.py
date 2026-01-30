@@ -15,12 +15,12 @@ from .ollama_provider import OllamaProvider
 from .azure_provider import AzureOpenAIProvider
 
 __all__ = [
-    'AIProvider',
-    'AIResponse',
-    'OpenAIProvider',
-    'AnthropicProvider',
-    'OllamaProvider',
-    'AzureOpenAIProvider',
+    "AIProvider",
+    "AIResponse",
+    "OpenAIProvider",
+    "AnthropicProvider",
+    "OllamaProvider",
+    "AzureOpenAIProvider",
 ]
 
 
@@ -39,16 +39,15 @@ def get_provider(provider_name: str, **kwargs) -> AIProvider:
         ValueError: If provider_name is not recognized
     """
     providers = {
-        'openai': OpenAIProvider,
-        'anthropic': AnthropicProvider,
-        'ollama': OllamaProvider,
-        'azure': AzureOpenAIProvider,
+        "openai": OpenAIProvider,
+        "anthropic": AnthropicProvider,
+        "ollama": OllamaProvider,
+        "azure": AzureOpenAIProvider,
     }
 
     if provider_name not in providers:
         raise ValueError(
-            f"Unknown provider: {provider_name}. "
-            f"Available: {list(providers.keys())}"
+            f"Unknown provider: {provider_name}. " f"Available: {list(providers.keys())}"
         )
 
     return providers[provider_name](**kwargs)

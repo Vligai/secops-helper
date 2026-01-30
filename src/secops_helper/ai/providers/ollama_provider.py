@@ -22,7 +22,7 @@ class OllamaProvider(AIProvider):
         self,
         endpoint: Optional[str] = None,
         model: str = DEFAULT_MODEL,
-        timeout: int = 120  # Local models can be slower
+        timeout: int = 120,  # Local models can be slower
     ):
         """
         Initialize Ollama provider.
@@ -32,10 +32,7 @@ class OllamaProvider(AIProvider):
             model: Model to use (default: llama3)
             timeout: Request timeout in seconds
         """
-        self._endpoint = endpoint or os.getenv(
-            'OLLAMA_ENDPOINT',
-            self.DEFAULT_ENDPOINT
-        )
+        self._endpoint = endpoint or os.getenv("OLLAMA_ENDPOINT", self.DEFAULT_ENDPOINT)
         self._model = model
         self._timeout = timeout
 
@@ -50,20 +47,13 @@ class OllamaProvider(AIProvider):
     def is_available(self) -> bool:
         """Check if Ollama is running and reachable"""
         try:
-            response = requests.get(
-                f"{self._endpoint}/api/tags",
-                timeout=5
-            )
+            response = requests.get(f"{self._endpoint}/api/tags", timeout=5)
             return response.status_code == 200
         except Exception:
             return False
 
     def analyze(
-        self,
-        prompt: str,
-        context: Dict[str, Any],
-        max_tokens: int = 2000,
-        temperature: float = 0.3
+        self, prompt: str, context: Dict[str, Any], max_tokens: int = 2000, temperature: float = 0.3
     ) -> AIResponse:
         """
         Send analysis request to local Ollama instance.
@@ -79,7 +69,7 @@ class OllamaProvider(AIProvider):
         """
         from ..prompts.system import SECURITY_ANALYST_SYSTEM_PROMPT
 
-        system_prompt = context.get('system_prompt', SECURITY_ANALYST_SYSTEM_PROMPT)
+        system_prompt = context.get("system_prompt", SECURITY_ANALYST_SYSTEM_PROMPT)
 
         # Combine system prompt and user prompt for Ollama
         full_prompt = f"{system_prompt}\n\n---\n\n{prompt}"
@@ -90,18 +80,13 @@ class OllamaProvider(AIProvider):
                 "model": self._model,
                 "prompt": full_prompt,
                 "stream": False,
-                "options": {
-                    "num_predict": max_tokens,
-                    "temperature": temperature
-                }
+                "options": {"num_predict": max_tokens, "temperature": temperature},
             },
-            timeout=self._timeout
+            timeout=self._timeout,
         )
 
         if response.status_code != 200:
-            raise RuntimeError(
-                f"Ollama request failed: {response.status_code} - {response.text}"
-            )
+            raise RuntimeError(f"Ollama request failed: {response.status_code} - {response.text}")
 
         result = response.json()
         content = result.get("response", "")
@@ -114,7 +99,7 @@ class OllamaProvider(AIProvider):
             confidence=self._extract_confidence(content),
             tokens_used=tokens_used,
             model=self._model,
-            cached=False
+            cached=False,
         )
 
     def _extract_confidence(self, content: str) -> float:
@@ -122,9 +107,9 @@ class OllamaProvider(AIProvider):
         import re
 
         patterns = [
-            r'(\d+(?:\.\d+)?)\s*%\s*confidence',
-            r'confidence[:\s]+(\d+(?:\.\d+)?)\s*%',
-            r'\((\d+(?:\.\d+)?)\s*%\)',
+            r"(\d+(?:\.\d+)?)\s*%\s*confidence",
+            r"confidence[:\s]+(\d+(?:\.\d+)?)\s*%",
+            r"\((\d+(?:\.\d+)?)\s*%\)",
         ]
 
         for pattern in patterns:
@@ -137,10 +122,7 @@ class OllamaProvider(AIProvider):
     def list_models(self) -> list:
         """List available models on the Ollama instance"""
         try:
-            response = requests.get(
-                f"{self._endpoint}/api/tags",
-                timeout=10
-            )
+            response = requests.get(f"{self._endpoint}/api/tags", timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 return [m["name"] for m in data.get("models", [])]

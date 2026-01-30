@@ -23,6 +23,7 @@ from .privacy import DataSanitizer, PrivacyConfig
 @dataclass
 class AnalysisConfig:
     """Configuration for AI analysis"""
+
     provider: str = "openai"
     model: Optional[str] = None
     depth: str = "standard"  # quick, standard, thorough
@@ -54,10 +55,10 @@ class AIAnalyzer:
 
         # Statistics tracking
         self._stats = {
-            'total_requests': 0,
-            'cache_hits': 0,
-            'tokens_used': 0,
-            'analysis_time_ms': 0,
+            "total_requests": 0,
+            "cache_hits": 0,
+            "tokens_used": 0,
+            "analysis_time_ms": 0,
         }
 
     @property
@@ -66,12 +67,9 @@ class AIAnalyzer:
         if self._provider is None:
             provider_kwargs = {}
             if self.config.model:
-                provider_kwargs['model'] = self.config.model
+                provider_kwargs["model"] = self.config.model
 
-            self._provider = get_provider(
-                self.config.provider,
-                **provider_kwargs
-            )
+            self._provider = get_provider(self.config.provider, **provider_kwargs)
         return self._provider
 
     @property
@@ -103,27 +101,23 @@ class AIAnalyzer:
             AIResponse with analysis results
         """
         start_time = time.time()
-        self._stats['total_requests'] += 1
+        self._stats["total_requests"] += 1
 
         # Sanitize data before processing
         sanitized_intel = self._sanitizer.sanitize(threat_intel)
         sanitized_behavioral = (
-            self._sanitizer.sanitize(behavioral_data)
-            if behavioral_data else None
+            self._sanitizer.sanitize(behavioral_data) if behavioral_data else None
         )
 
         # Check cache
         if self.config.use_cache:
             prompt_hash = self._get_prompt_hash(input_type, self.config.depth)
             cache_key = self.cache.get_cache_key(
-                input_value,
-                input_type,
-                prompt_hash,
-                self.provider.model
+                input_value, input_type, prompt_hash, self.provider.model
             )
             cached_response = self.cache.get(cache_key)
             if cached_response:
-                self._stats['cache_hits'] += 1
+                self._stats["cache_hits"] += 1
                 return cached_response
 
         # Build prompt
@@ -133,7 +127,7 @@ class AIAnalyzer:
             threat_intel=sanitized_intel,
             depth=self.config.depth,
             behavioral_data=sanitized_behavioral,
-            org_context=org_context
+            org_context=org_context,
         )
 
         # Get system prompt
@@ -142,17 +136,17 @@ class AIAnalyzer:
         # Send to AI provider
         response = self.provider.analyze(
             prompt=prompt,
-            context={'system_prompt': system_prompt},
+            context={"system_prompt": system_prompt},
             max_tokens=self.config.max_tokens,
-            temperature=self.config.temperature
+            temperature=self.config.temperature,
         )
 
         # Parse structured data from response
         response = self._parse_response(response)
 
         # Update stats
-        self._stats['tokens_used'] += response.tokens_used
-        self._stats['analysis_time_ms'] += int((time.time() - start_time) * 1000)
+        self._stats["tokens_used"] += response.tokens_used
+        self._stats["analysis_time_ms"] += int((time.time() - start_time) * 1000)
 
         # Cache response
         if self.config.use_cache:
@@ -164,7 +158,7 @@ class AIAnalyzer:
         self,
         iocs: List[Dict[str, str]],
         threat_intel_results: Dict[str, Dict[str, Any]],
-        org_context: Optional[Dict[str, str]] = None
+        org_context: Optional[Dict[str, str]] = None,
     ) -> AIResponse:
         """
         Perform correlation analysis across multiple IOCs.
@@ -178,46 +172,40 @@ class AIAnalyzer:
             AIResponse with correlation analysis
         """
         start_time = time.time()
-        self._stats['total_requests'] += 1
+        self._stats["total_requests"] += 1
 
         # Sanitize all threat intel data
         sanitized_results = {
-            ioc: self._sanitizer.sanitize(intel)
-            for ioc, intel in threat_intel_results.items()
+            ioc: self._sanitizer.sanitize(intel) for ioc, intel in threat_intel_results.items()
         }
 
         # Build correlation prompt
         prompt = build_correlation_prompt(
-            iocs=iocs,
-            threat_intel_results=sanitized_results,
-            org_context=org_context
+            iocs=iocs, threat_intel_results=sanitized_results, org_context=org_context
         )
 
         # Get correlation system prompt
-        system_prompt = get_system_prompt('correlation')
+        system_prompt = get_system_prompt("correlation")
 
         # Send to AI provider (correlation not cached due to complexity)
         response = self.provider.analyze(
             prompt=prompt,
-            context={'system_prompt': system_prompt},
+            context={"system_prompt": system_prompt},
             max_tokens=self.config.max_tokens * 2,  # Larger for correlations
-            temperature=self.config.temperature
+            temperature=self.config.temperature,
         )
 
         # Parse structured data
         response = self._parse_response(response)
 
         # Update stats
-        self._stats['tokens_used'] += response.tokens_used
-        self._stats['analysis_time_ms'] += int((time.time() - start_time) * 1000)
+        self._stats["tokens_used"] += response.tokens_used
+        self._stats["analysis_time_ms"] += int((time.time() - start_time) * 1000)
 
         return response
 
     def generate_report(
-        self,
-        analysis_results: AIResponse,
-        primary_ioc: str,
-        report_format: str = "markdown"
+        self, analysis_results: AIResponse, primary_ioc: str, report_format: str = "markdown"
     ) -> str:
         """
         Generate a formatted report from analysis results.
@@ -234,19 +222,15 @@ class AIAnalyzer:
             report = format_json_report(
                 analysis_results=analysis_results.to_dict(),
                 primary_ioc=primary_ioc,
-                metadata={'stats': self._stats}
+                metadata={"stats": self._stats},
             )
             return json.dumps(report, indent=2)
         else:
             return format_markdown_report(
-                analysis_results=analysis_results.to_dict(),
-                primary_ioc=primary_ioc
+                analysis_results=analysis_results.to_dict(), primary_ioc=primary_ioc
             )
 
-    def get_transmission_preview(
-        self,
-        threat_intel: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def get_transmission_preview(self, threat_intel: Dict[str, Any]) -> Dict[str, Any]:
         """
         Preview what data would be sent to the AI provider.
 
@@ -270,30 +254,32 @@ class AIAnalyzer:
         cache_stats = self.cache.get_stats() if self._cache else {}
 
         return {
-            'requests': {
-                'total': self._stats['total_requests'],
-                'cache_hits': self._stats['cache_hits'],
-                'cache_hit_rate': (
-                    self._stats['cache_hits'] / self._stats['total_requests']
-                    if self._stats['total_requests'] > 0 else 0
-                )
+            "requests": {
+                "total": self._stats["total_requests"],
+                "cache_hits": self._stats["cache_hits"],
+                "cache_hit_rate": (
+                    self._stats["cache_hits"] / self._stats["total_requests"]
+                    if self._stats["total_requests"] > 0
+                    else 0
+                ),
             },
-            'tokens': {
-                'total_used': self._stats['tokens_used'],
-                'estimated_cost_usd': self._estimate_cost(self._stats['tokens_used'])
+            "tokens": {
+                "total_used": self._stats["tokens_used"],
+                "estimated_cost_usd": self._estimate_cost(self._stats["tokens_used"]),
             },
-            'performance': {
-                'total_analysis_time_ms': self._stats['analysis_time_ms'],
-                'avg_analysis_time_ms': (
-                    self._stats['analysis_time_ms'] / self._stats['total_requests']
-                    if self._stats['total_requests'] > 0 else 0
-                )
+            "performance": {
+                "total_analysis_time_ms": self._stats["analysis_time_ms"],
+                "avg_analysis_time_ms": (
+                    self._stats["analysis_time_ms"] / self._stats["total_requests"]
+                    if self._stats["total_requests"] > 0
+                    else 0
+                ),
             },
-            'cache': cache_stats,
-            'provider': {
-                'name': self.provider.name if self._provider else self.config.provider,
-                'model': self.provider.model if self._provider else self.config.model
-            }
+            "cache": cache_stats,
+            "provider": {
+                "name": self.provider.name if self._provider else self.config.provider,
+                "model": self.provider.model if self._provider else self.config.model,
+            },
         }
 
     def _get_prompt_hash(self, input_type: str, depth: str) -> str:
@@ -339,10 +325,9 @@ class AIAnalyzer:
     def _extract_verdict(self, content: str) -> Optional[Verdict]:
         """Extract verdict from response"""
         import re
+
         match = re.search(
-            r'VERDICT:\s*(MALICIOUS|SUSPICIOUS|CLEAN|UNKNOWN)',
-            content,
-            re.IGNORECASE
+            r"VERDICT:\s*(MALICIOUS|SUSPICIOUS|CLEAN|UNKNOWN)", content, re.IGNORECASE
         )
         if match:
             verdict_str = match.group(1).upper()
@@ -352,11 +337,8 @@ class AIAnalyzer:
     def _extract_severity(self, content: str) -> Optional[Severity]:
         """Extract severity from response"""
         import re
-        match = re.search(
-            r'SEVERITY:\s*(CRITICAL|HIGH|MEDIUM|LOW|INFO)',
-            content,
-            re.IGNORECASE
-        )
+
+        match = re.search(r"SEVERITY:\s*(CRITICAL|HIGH|MEDIUM|LOW|INFO)", content, re.IGNORECASE)
         if match:
             severity_str = match.group(1).upper()
             return Severity[severity_str]
@@ -365,18 +347,15 @@ class AIAnalyzer:
     def _extract_findings(self, content: str) -> List[str]:
         """Extract key findings bullet points"""
         import re
+
         findings = []
 
         # Look for "Key Findings:" section
-        match = re.search(
-            r'Key Findings:?\s*([\s\S]*?)(?=\n\n|\n[A-Z]|\Z)',
-            content,
-            re.IGNORECASE
-        )
+        match = re.search(r"Key Findings:?\s*([\s\S]*?)(?=\n\n|\n[A-Z]|\Z)", content, re.IGNORECASE)
         if match:
             section = match.group(1)
             # Extract bullet points
-            bullets = re.findall(r'[•\-\*]\s*(.+?)(?=\n|$)', section)
+            bullets = re.findall(r"[•\-\*]\s*(.+?)(?=\n|$)", section)
             findings.extend([b.strip() for b in bullets if b.strip()])
 
         return findings[:5]  # Limit to 5
@@ -384,7 +363,8 @@ class AIAnalyzer:
     def _extract_section(self, content: str, section_name: str) -> Optional[str]:
         """Extract a named section from response"""
         import re
-        pattern = rf'{section_name}:?\s*([\s\S]*?)(?=\n\n[A-Z]|\n##|\Z)'
+
+        pattern = rf"{section_name}:?\s*([\s\S]*?)(?=\n\n[A-Z]|\n##|\Z)"
         match = re.search(pattern, content, re.IGNORECASE)
         if match:
             return match.group(1).strip()
@@ -393,13 +373,14 @@ class AIAnalyzer:
     def _extract_actions(self, content: str) -> List[RecommendedAction]:
         """Extract recommended actions"""
         import re
+
         actions = []
 
         # Look for prioritized action sections
         patterns = [
-            (r'IMMEDIATE[:\s]*([\s\S]*?)(?=\n\n|\nSHORT|\nLONG|\Z)', 'immediate'),
-            (r'SHORT[- ]TERM[:\s]*([\s\S]*?)(?=\n\n|\nLONG|\Z)', 'short_term'),
-            (r'LONG[- ]TERM[:\s]*([\s\S]*?)(?=\n\n|\Z)', 'long_term'),
+            (r"IMMEDIATE[:\s]*([\s\S]*?)(?=\n\n|\nSHORT|\nLONG|\Z)", "immediate"),
+            (r"SHORT[- ]TERM[:\s]*([\s\S]*?)(?=\n\n|\nLONG|\Z)", "short_term"),
+            (r"LONG[- ]TERM[:\s]*([\s\S]*?)(?=\n\n|\Z)", "long_term"),
         ]
 
         for pattern, priority in patterns:
@@ -407,21 +388,20 @@ class AIAnalyzer:
             if match:
                 section = match.group(1)
                 # Extract numbered items
-                items = re.findall(r'\d+\.\s*(.+?)(?=\n\d+\.|\n\n|\Z)', section)
+                items = re.findall(r"\d+\.\s*(.+?)(?=\n\d+\.|\n\n|\Z)", section)
                 for item in items:
-                    actions.append(RecommendedAction(
-                        priority=priority,
-                        action=item.strip(),
-                        details=""
-                    ))
+                    actions.append(
+                        RecommendedAction(priority=priority, action=item.strip(), details="")
+                    )
 
         return actions
 
     def _extract_mitre(self, content: str) -> List[str]:
         """Extract MITRE ATT&CK technique IDs"""
         import re
+
         # Match patterns like T1566.001, T1059, TA0001
-        matches = re.findall(r'T[AS]?\d{4}(?:\.\d{3})?', content)
+        matches = re.findall(r"T[AS]?\d{4}(?:\.\d{3})?", content)
         return list(set(matches))  # Deduplicate
 
     def _estimate_cost(self, tokens: int) -> float:
@@ -436,10 +416,7 @@ class AIAnalyzer:
 
 # Convenience function for quick analysis
 def quick_analyze(
-    input_value: str,
-    input_type: str,
-    threat_intel: Dict[str, Any],
-    provider: str = "openai"
+    input_value: str, input_type: str, threat_intel: Dict[str, Any], provider: str = "openai"
 ) -> AIResponse:
     """
     Convenience function for quick AI analysis.

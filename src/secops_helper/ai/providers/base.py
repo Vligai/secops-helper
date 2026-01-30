@@ -12,6 +12,7 @@ from enum import Enum
 
 class Verdict(Enum):
     """Threat verdict classification"""
+
     MALICIOUS = "MALICIOUS"
     SUSPICIOUS = "SUSPICIOUS"
     CLEAN = "CLEAN"
@@ -20,6 +21,7 @@ class Verdict(Enum):
 
 class Severity(Enum):
     """Threat severity levels"""
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -30,6 +32,7 @@ class Severity(Enum):
 @dataclass
 class RecommendedAction:
     """A recommended security action"""
+
     priority: str  # "immediate", "short_term", "long_term"
     action: str
     details: str
@@ -38,6 +41,7 @@ class RecommendedAction:
 @dataclass
 class AIResponse:
     """Structured response from AI analysis"""
+
     content: str
     confidence: float
     tokens_used: int
@@ -68,11 +72,7 @@ class AIResponse:
             "key_findings": self.key_findings,
             "threat_context": self.threat_context,
             "recommended_actions": [
-                {
-                    "priority": a.priority,
-                    "action": a.action,
-                    "details": a.details
-                }
+                {"priority": a.priority, "action": a.action, "details": a.details}
                 for a in self.recommended_actions
             ],
             "mitre_attack": self.mitre_attack,
@@ -82,8 +82,8 @@ class AIResponse:
             "metadata": {
                 "model": self.model,
                 "tokens_used": self.tokens_used,
-                "cached": self.cached
-            }
+                "cached": self.cached,
+            },
         }
 
 
@@ -92,11 +92,7 @@ class AIProvider(ABC):
 
     @abstractmethod
     def analyze(
-        self,
-        prompt: str,
-        context: Dict[str, Any],
-        max_tokens: int = 2000,
-        temperature: float = 0.3
+        self, prompt: str, context: Dict[str, Any], max_tokens: int = 2000, temperature: float = 0.3
     ) -> AIResponse:
         """
         Send analysis request to AI provider.

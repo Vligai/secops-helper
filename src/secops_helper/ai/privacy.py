@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass
 class PrivacyConfig:
     """Privacy configuration for AI data transmission"""
+
     send_file_contents: bool = False
     send_internal_ips: bool = False
     sanitize_usernames: bool = True
@@ -26,37 +27,37 @@ class DataSanitizer:
 
     # Private IP ranges (RFC 1918 + loopback)
     PRIVATE_IP_PATTERNS = [
-        r'10\.\d{1,3}\.\d{1,3}\.\d{1,3}',
-        r'172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}',
-        r'192\.168\.\d{1,3}\.\d{1,3}',
-        r'127\.\d{1,3}\.\d{1,3}\.\d{1,3}',
-        r'169\.254\.\d{1,3}\.\d{1,3}',  # Link-local
+        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}",
+        r"172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}",
+        r"192\.168\.\d{1,3}\.\d{1,3}",
+        r"127\.\d{1,3}\.\d{1,3}\.\d{1,3}",
+        r"169\.254\.\d{1,3}\.\d{1,3}",  # Link-local
     ]
 
     # Username patterns in various contexts
     USERNAME_PATTERNS = [
-        r'C:\\Users\\([^\\]+)',  # Windows path
-        r'/home/([^/]+)',  # Linux path
-        r'/Users/([^/]+)',  # macOS path
-        r'(?:user|username|login)[=:]\s*([^\s,;]+)',  # Generic user fields
+        r"C:\\Users\\([^\\]+)",  # Windows path
+        r"/home/([^/]+)",  # Linux path
+        r"/Users/([^/]+)",  # macOS path
+        r"(?:user|username|login)[=:]\s*([^\s,;]+)",  # Generic user fields
     ]
 
     # Hostname patterns
     HOSTNAME_PATTERNS = [
-        r'\\\\([^\\]+)\\',  # UNC path
-        r'(?:host|hostname|server)[=:]\s*([^\s,;]+)',  # Generic host fields
+        r"\\\\([^\\]+)\\",  # UNC path
+        r"(?:host|hostname|server)[=:]\s*([^\s,;]+)",  # Generic host fields
     ]
 
     # Sensitive file patterns to never include
     SENSITIVE_FILE_PATTERNS = [
-        r'\.env$',
-        r'\.pem$',
-        r'\.key$',
-        r'credentials',
-        r'password',
-        r'secret',
-        r'token',
-        r'api_key',
+        r"\.env$",
+        r"\.pem$",
+        r"\.key$",
+        r"credentials",
+        r"password",
+        r"secret",
+        r"token",
+        r"api_key",
     ]
 
     def __init__(self, config: Optional[PrivacyConfig] = None):
@@ -98,41 +99,35 @@ class DataSanitizer:
         # Remove internal IPs if configured
         if not self.config.send_internal_ips:
             for pattern in self.PRIVATE_IP_PATTERNS:
-                result = re.sub(pattern, '[INTERNAL_IP]', result)
+                result = re.sub(pattern, "[INTERNAL_IP]", result)
 
         # Sanitize usernames if configured
         if self.config.sanitize_usernames:
             for pattern in self.USERNAME_PATTERNS:
-                result = re.sub(pattern, lambda m: m.group(0).replace(
-                    m.group(1) if m.groups() else '', '[USER]'
-                ), result, flags=re.IGNORECASE)
+                result = re.sub(
+                    pattern,
+                    lambda m: m.group(0).replace(m.group(1) if m.groups() else "", "[USER]"),
+                    result,
+                    flags=re.IGNORECASE,
+                )
 
         # Sanitize hostnames if configured
         if self.config.sanitize_hostnames:
             for pattern in self.HOSTNAME_PATTERNS:
-                result = re.sub(pattern, lambda m: m.group(0).replace(
-                    m.group(1) if m.groups() else '', '[HOST]'
-                ), result, flags=re.IGNORECASE)
+                result = re.sub(
+                    pattern,
+                    lambda m: m.group(0).replace(m.group(1) if m.groups() else "", "[HOST]"),
+                    result,
+                    flags=re.IGNORECASE,
+                )
 
         # Sanitize file paths if configured
         if self.config.sanitize_paths:
             # Windows paths
-            result = re.sub(
-                r'C:\\Users\\[^\\]+\\',
-                r'C:\\Users\\[USER]\\',
-                result
-            )
+            result = re.sub(r"C:\\Users\\[^\\]+\\", r"C:\\Users\\[USER]\\", result)
             # Unix paths
-            result = re.sub(
-                r'/home/[^/]+/',
-                '/home/[USER]/',
-                result
-            )
-            result = re.sub(
-                r'/Users/[^/]+/',
-                '/Users/[USER]/',
-                result
-            )
+            result = re.sub(r"/home/[^/]+/", "/home/[USER]/", result)
+            result = re.sub(r"/Users/[^/]+/", "/Users/[USER]/", result)
 
         return result
 
@@ -150,23 +145,18 @@ class DataSanitizer:
         removed = self._identify_removed(data, sanitized)
 
         return {
-            'will_send': sanitized,
-            'removed_or_sanitized': removed,
-            'privacy_config': {
-                'send_file_contents': self.config.send_file_contents,
-                'send_internal_ips': self.config.send_internal_ips,
-                'sanitize_usernames': self.config.sanitize_usernames,
-                'sanitize_hostnames': self.config.sanitize_hostnames,
-                'sanitize_paths': self.config.sanitize_paths,
-            }
+            "will_send": sanitized,
+            "removed_or_sanitized": removed,
+            "privacy_config": {
+                "send_file_contents": self.config.send_file_contents,
+                "send_internal_ips": self.config.send_internal_ips,
+                "sanitize_usernames": self.config.sanitize_usernames,
+                "sanitize_hostnames": self.config.sanitize_hostnames,
+                "sanitize_paths": self.config.sanitize_paths,
+            },
         }
 
-    def _identify_removed(
-        self,
-        original: Any,
-        sanitized: Any,
-        path: str = ""
-    ) -> List[str]:
+    def _identify_removed(self, original: Any, sanitized: Any, path: str = "") -> List[str]:
         """Identify what was removed or sanitized"""
         removed = []
 
@@ -176,16 +166,10 @@ class DataSanitizer:
                 if key not in sanitized:
                     removed.append(f"{new_path}: [REMOVED]")
                 else:
-                    removed.extend(self._identify_removed(
-                        original[key],
-                        sanitized[key],
-                        new_path
-                    ))
+                    removed.extend(self._identify_removed(original[key], sanitized[key], new_path))
         elif isinstance(original, list) and isinstance(sanitized, list):
             for i, (orig, san) in enumerate(zip(original, sanitized)):
-                removed.extend(self._identify_removed(
-                    orig, san, f"{path}[{i}]"
-                ))
+                removed.extend(self._identify_removed(orig, san, f"{path}[{i}]"))
         elif isinstance(original, str) and isinstance(sanitized, str):
             if original != sanitized:
                 removed.append(f"{path}: sanitized")
@@ -219,17 +203,17 @@ class DataSanitizer:
         Returns:
             Defanged IOC string
         """
-        if ioc_type == 'ip':
-            return ioc.replace('.', '[.]')
-        elif ioc_type == 'domain':
-            return ioc.replace('.', '[.]')
-        elif ioc_type == 'url':
-            result = ioc.replace('http://', 'hxxp://')
-            result = result.replace('https://', 'hxxps://')
-            result = result.replace('.', '[.]')
+        if ioc_type == "ip":
+            return ioc.replace(".", "[.]")
+        elif ioc_type == "domain":
+            return ioc.replace(".", "[.]")
+        elif ioc_type == "url":
+            result = ioc.replace("http://", "hxxp://")
+            result = result.replace("https://", "hxxps://")
+            result = result.replace(".", "[.]")
             return result
-        elif ioc_type == 'email':
-            return ioc.replace('@', '[@]').replace('.', '[.]')
+        elif ioc_type == "email":
+            return ioc.replace("@", "[@]").replace(".", "[.]")
         return ioc
 
     def refang_ioc(self, ioc: str) -> str:
@@ -242,8 +226,8 @@ class DataSanitizer:
         Returns:
             Original IOC value
         """
-        result = ioc.replace('[.]', '.')
-        result = result.replace('[@]', '@')
-        result = result.replace('hxxp://', 'http://')
-        result = result.replace('hxxps://', 'https://')
+        result = ioc.replace("[.]", ".")
+        result = result.replace("[@]", "@")
+        result = result.replace("hxxp://", "http://")
+        result = result.replace("hxxps://", "https://")
         return result

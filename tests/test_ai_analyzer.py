@@ -30,10 +30,7 @@ class TestAIResponse:
     def test_basic_response(self):
         """Test creating a basic AIResponse"""
         response = AIResponse(
-            content="Test content",
-            confidence=0.85,
-            tokens_used=100,
-            model="gpt-4"
+            content="Test content", confidence=0.85, tokens_used=100, model="gpt-4"
         )
         assert response.content == "Test content"
         assert response.confidence == 0.85
@@ -49,14 +46,14 @@ class TestAIResponse:
             model="gpt-4",
             verdict=Verdict.MALICIOUS,
             severity=Severity.HIGH,
-            key_findings=["Finding 1", "Finding 2"]
+            key_findings=["Finding 1", "Finding 2"],
         )
         result = response.to_dict()
 
-        assert result['verdict'] == 'MALICIOUS'
-        assert result['severity'] == 'HIGH'
-        assert result['confidence'] == 0.9
-        assert len(result['key_findings']) == 2
+        assert result["verdict"] == "MALICIOUS"
+        assert result["severity"] == "HIGH"
+        assert result["confidence"] == 0.9
+        assert len(result["key_findings"]) == 2
 
 
 class TestDataSanitizer:
@@ -65,64 +62,55 @@ class TestDataSanitizer:
     def test_sanitize_internal_ips(self):
         """Test that internal IPs are sanitized"""
         sanitizer = DataSanitizer()
-        data = {
-            'source_ip': '192.168.1.100',
-            'dest_ip': '8.8.8.8',
-            'internal': '10.0.0.1'
-        }
+        data = {"source_ip": "192.168.1.100", "dest_ip": "8.8.8.8", "internal": "10.0.0.1"}
         result = sanitizer.sanitize(data)
 
-        assert '[INTERNAL_IP]' in result['source_ip']
-        assert result['dest_ip'] == '8.8.8.8'  # Public IP unchanged
-        assert '[INTERNAL_IP]' in result['internal']
+        assert "[INTERNAL_IP]" in result["source_ip"]
+        assert result["dest_ip"] == "8.8.8.8"  # Public IP unchanged
+        assert "[INTERNAL_IP]" in result["internal"]
 
     def test_sanitize_paths(self):
         """Test that user paths are sanitized"""
         sanitizer = DataSanitizer()
-        data = {
-            'path': 'C:\\Users\\john.doe\\Documents\\file.txt'
-        }
+        data = {"path": "C:\\Users\\john.doe\\Documents\\file.txt"}
         result = sanitizer.sanitize(data)
 
-        assert '[USER]' in result['path']
-        assert 'john.doe' not in result['path']
+        assert "[USER]" in result["path"]
+        assert "john.doe" not in result["path"]
 
     def test_defang_ioc(self):
         """Test IOC defanging"""
         sanitizer = DataSanitizer()
 
-        assert sanitizer.defang_ioc('192.168.1.1', 'ip') == '192[.]168[.]1[.]1'
-        assert sanitizer.defang_ioc('evil.com', 'domain') == 'evil[.]com'
-        assert 'hxxps://' in sanitizer.defang_ioc('https://evil.com/path', 'url')
+        assert sanitizer.defang_ioc("192.168.1.1", "ip") == "192[.]168[.]1[.]1"
+        assert sanitizer.defang_ioc("evil.com", "domain") == "evil[.]com"
+        assert "hxxps://" in sanitizer.defang_ioc("https://evil.com/path", "url")
 
     def test_refang_ioc(self):
         """Test IOC refanging"""
         sanitizer = DataSanitizer()
 
-        assert sanitizer.refang_ioc('192[.]168[.]1[.]1') == '192.168.1.1'
-        assert sanitizer.refang_ioc('hxxps://evil[.]com') == 'https://evil.com'
+        assert sanitizer.refang_ioc("192[.]168[.]1[.]1") == "192.168.1.1"
+        assert sanitizer.refang_ioc("hxxps://evil[.]com") == "https://evil.com"
 
     def test_sensitive_file_detection(self):
         """Test detection of sensitive files"""
         sanitizer = DataSanitizer()
 
-        assert sanitizer.is_sensitive_file('.env') is True
-        assert sanitizer.is_sensitive_file('credentials.json') is True
-        assert sanitizer.is_sensitive_file('private.key') is True
-        assert sanitizer.is_sensitive_file('malware.exe') is False
+        assert sanitizer.is_sensitive_file(".env") is True
+        assert sanitizer.is_sensitive_file("credentials.json") is True
+        assert sanitizer.is_sensitive_file("private.key") is True
+        assert sanitizer.is_sensitive_file("malware.exe") is False
 
     def test_transmission_preview(self):
         """Test generating transmission preview"""
         sanitizer = DataSanitizer()
-        data = {
-            'ioc': 'abc123',
-            'internal_ip': '10.0.0.1'
-        }
+        data = {"ioc": "abc123", "internal_ip": "10.0.0.1"}
         preview = sanitizer.get_transmission_preview(data)
 
-        assert 'will_send' in preview
-        assert 'removed_or_sanitized' in preview
-        assert 'privacy_config' in preview
+        assert "will_send" in preview
+        assert "removed_or_sanitized" in preview
+        assert "privacy_config" in preview
 
 
 class TestAIResponseCache:
@@ -136,18 +124,12 @@ class TestAIResponseCache:
 
             # Create a response
             response = AIResponse(
-                content="Test response",
-                confidence=0.8,
-                tokens_used=100,
-                model="gpt-4"
+                content="Test response", confidence=0.8, tokens_used=100, model="gpt-4"
             )
 
             # Generate cache key
             cache_key = cache.get_cache_key(
-                input_value="test_hash",
-                input_type="hash",
-                prompt_hash="abc123",
-                model="gpt-4"
+                input_value="test_hash", input_type="hash", prompt_hash="abc123", model="gpt-4"
             )
 
             # Store response
@@ -175,9 +157,9 @@ class TestAIResponseCache:
             cache = AIResponseCache(cache_path=str(cache_path))
 
             stats = cache.get_stats()
-            assert 'total_entries' in stats
-            assert 'valid_entries' in stats
-            assert 'cache_path' in stats
+            assert "total_entries" in stats
+            assert "valid_entries" in stats
+            assert "cache_path" in stats
 
 
 class TestPrompts:
@@ -186,53 +168,44 @@ class TestPrompts:
     def test_system_prompt_exists(self):
         """Test that system prompt is defined"""
         assert len(SECURITY_ANALYST_SYSTEM_PROMPT) > 100
-        assert 'VERDICT' in SECURITY_ANALYST_SYSTEM_PROMPT
-        assert 'SEVERITY' in SECURITY_ANALYST_SYSTEM_PROMPT
+        assert "VERDICT" in SECURITY_ANALYST_SYSTEM_PROMPT
+        assert "SEVERITY" in SECURITY_ANALYST_SYSTEM_PROMPT
 
     def test_get_specialized_prompt(self):
         """Test getting specialized prompts by type"""
-        hash_prompt = get_system_prompt('hash')
-        email_prompt = get_system_prompt('email')
-        default_prompt = get_system_prompt('unknown')
+        hash_prompt = get_system_prompt("hash")
+        email_prompt = get_system_prompt("email")
+        default_prompt = get_system_prompt("unknown")
 
-        assert 'HASH ANALYSIS' in hash_prompt
-        assert 'EMAIL ANALYSIS' in email_prompt
+        assert "HASH ANALYSIS" in hash_prompt
+        assert "EMAIL ANALYSIS" in email_prompt
         assert default_prompt == SECURITY_ANALYST_SYSTEM_PROMPT
 
     def test_build_analysis_prompt(self):
         """Test building analysis prompts"""
         threat_intel = {
-            'virustotal': {'detection_ratio': '45/70'},
-            'malwarebazaar': {'signature': 'Emotet'}
+            "virustotal": {"detection_ratio": "45/70"},
+            "malwarebazaar": {"signature": "Emotet"},
         }
 
         prompt = build_analysis_prompt(
-            input_type='hash',
-            input_value='abc123',
-            threat_intel=threat_intel,
-            depth='standard'
+            input_type="hash", input_value="abc123", threat_intel=threat_intel, depth="standard"
         )
 
-        assert 'hash' in prompt.lower()
-        assert 'abc123' in prompt
-        assert 'virustotal' in prompt.lower()
+        assert "hash" in prompt.lower()
+        assert "abc123" in prompt
+        assert "virustotal" in prompt.lower()
 
     def test_quick_analysis_prompt(self):
         """Test quick analysis prompt is shorter"""
-        threat_intel = {'test': 'data'}
+        threat_intel = {"test": "data"}
 
         quick = build_analysis_prompt(
-            input_type='hash',
-            input_value='test',
-            threat_intel=threat_intel,
-            depth='quick'
+            input_type="hash", input_value="test", threat_intel=threat_intel, depth="quick"
         )
 
         standard = build_analysis_prompt(
-            input_type='hash',
-            input_value='test',
-            threat_intel=threat_intel,
-            depth='standard'
+            input_type="hash", input_value="test", threat_intel=threat_intel, depth="standard"
         )
 
         assert len(quick) < len(standard)
@@ -241,36 +214,33 @@ class TestPrompts:
 class TestAIAnalyzer:
     """Tests for the main AIAnalyzer class"""
 
-    @patch('secops_helper.ai.providers.get_provider')
+    @patch("secops_helper.ai.providers.get_provider")
     def test_analyzer_initialization(self, mock_get_provider):
         """Test analyzer initializes correctly"""
-        config = AnalysisConfig(provider='openai')
+        config = AnalysisConfig(provider="openai")
         analyzer = AIAnalyzer(config)
 
-        assert analyzer.config.provider == 'openai'
-        assert analyzer.config.depth == 'standard'
+        assert analyzer.config.provider == "openai"
+        assert analyzer.config.depth == "standard"
 
-    @patch('secops_helper.ai.providers.get_provider')
+    @patch("secops_helper.ai.providers.get_provider")
     def test_transmission_preview(self, mock_get_provider):
         """Test dry-run transmission preview"""
         analyzer = AIAnalyzer()
 
-        threat_intel = {
-            'hash': 'abc123',
-            'internal_source': '192.168.1.1'
-        }
+        threat_intel = {"hash": "abc123", "internal_source": "192.168.1.1"}
 
         preview = analyzer.get_transmission_preview(threat_intel)
-        assert 'will_send' in preview
+        assert "will_send" in preview
 
     def test_stats_tracking(self):
         """Test statistics are tracked"""
         analyzer = AIAnalyzer()
         stats = analyzer.get_stats()
 
-        assert 'requests' in stats
-        assert 'tokens' in stats
-        assert 'performance' in stats
+        assert "requests" in stats
+        assert "tokens" in stats
+        assert "performance" in stats
 
 
 class TestProviderBase:
@@ -314,14 +284,10 @@ class TestIntegration:
 
         provider = OpenAIProvider()
         if provider.is_available():
-            response = provider.analyze(
-                prompt="Say hello",
-                context={},
-                max_tokens=50
-            )
+            response = provider.analyze(prompt="Say hello", context={}, max_tokens=50)
             assert response.content
             assert response.tokens_used > 0
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
